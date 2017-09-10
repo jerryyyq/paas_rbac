@@ -4,7 +4,7 @@ USE `paas_rbac`;
 --
 -- Host: localhost    Database: paas_rbac
 -- ------------------------------------------------------
--- Server version	5.7.18-0ubuntu0.16.04.1
+-- Server version	5.7.19-0ubuntu0.16.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -26,6 +26,7 @@ DROP TABLE IF EXISTS `ac_privilege`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `ac_privilege` (
   `id_privilege` int(11) NOT NULL AUTO_INCREMENT,
+  `id_father` int(11) NOT NULL DEFAULT '0',
   `name` varchar(128) DEFAULT NULL,
   `show_name` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id_privilege`)
@@ -41,9 +42,10 @@ DROP TABLE IF EXISTS `ac_resource`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `ac_resource` (
   `id_resource` int(11) NOT NULL AUTO_INCREMENT,
+  `type` int(11) NOT NULL COMMENT '0:sys, 1:enteprise, 2:websit',
+  `relation_id` int(11) NOT NULL DEFAULT '0',
   `name` varchar(128) DEFAULT NULL,
   `show_name` varchar(128) DEFAULT NULL,
-  `type` int(11) NOT NULL COMMENT '0:sys, 1:enteprise, 2:websit',
   PRIMARY KEY (`id_resource`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -57,10 +59,10 @@ DROP TABLE IF EXISTS `ac_rule`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `ac_rule` (
   `id_rule` int(11) NOT NULL AUTO_INCREMENT,
+  `type` int(11) NOT NULL COMMENT '0:sys, 1:enteprise, 2:websit',
   `name` varchar(128) DEFAULT NULL,
   `show_name` varchar(128) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
-  `type` int(11) NOT NULL COMMENT '0:sys, 1:enteprise, 2:websit',
   PRIMARY KEY (`id_rule`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -128,7 +130,7 @@ DROP TABLE IF EXISTS `sys_admin`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sys_admin` (
-  `idadmin` int(11) NOT NULL AUTO_INCREMENT,
+  `id_admin` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(45) DEFAULT NULL,
   `email` varchar(45) DEFAULT NULL,
   `mobile` varchar(45) DEFAULT NULL,
@@ -139,7 +141,7 @@ CREATE TABLE `sys_admin` (
   `wx_unionid` varchar(128) DEFAULT NULL,
   `wx_openid` varchar(128) DEFAULT NULL,
   `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`idadmin`)
+  PRIMARY KEY (`id_admin`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -175,4 +177,4 @@ CREATE TABLE `website` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-08-30  0:11:21
+-- Dump completed on 2017-09-10 22:49:50
