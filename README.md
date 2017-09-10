@@ -21,6 +21,22 @@
 　　    　　   └─ web 站点 N
 ```
 
+## 数据模型
+### ac_privilege
+权限表，记录全系统内所有的权限，例如：修改、增加、读取、删除、执行
+* id_privilege 主键
+* name 标识名，用在系统内进行权限判断时使用
+* show_name 显示名，方便阅读
+
+### ac_resource
+资源表，记录系统内所有需要被权限隔离的资源，这些资源分三类：系统的，企业的，web 站点的
+* id_resource 主键
+* type 0:sys, 1:enteprise, 2:websit ...
+* relation_id 关联 id，可能是 管理员 id, 企业 id, websit id, 行为 id 等；也可能是 0，表示无关联项
+* name 标识名，用在系统内进行权限判断时使用
+* show_name 显示名，方便阅读
+
+
 ## 系统登录入口
 PAAS 系统，应该有三个登录入口
 1. 系统管理员登录入口
