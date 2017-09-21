@@ -39,6 +39,55 @@ define('PBKDF2_ITERATIONS', 1000);
 define('PBKDF2_LENGTH', 512);
 
 
+/* ------- 所有的参数都封装到 json 串中，GET 为 parameters 参数，POST 时直接为 body，也可以为 parameters 参数 ----------
+* comm_get_parameters 既可以获取 GET 时的 parameters 参数，也可以获取 POST 上来的参数
+* 
+* ------- 所有的应答返回值都封装到 json 串中，{"err":0, "err_msg":"", "data":{}} ----------
+* err 为应答码，0 表示成功，其它值表示失败
+* err_msg 为具体错误信息
+* data 为返回的数据
+*/
+function comm_get_parameters( $mast_exist_parameters )
+{
+    if( $raw_arg = @$_REQUEST['parameters'] )
+    {
+        // 获取 url 后面的参数
+        $url_decode_arg = urldecode($raw_arg);
+        $input = str_replace('\\', '', $url_decode_arg);
+    }
+    else
+    {
+        // 获取 body 中的参数
+        $input = @file_get_contents('php://input');
+    };
+    $params = json_decode($input, true);
+    
+    return $params; 
+}
+
+/* ---------- 检查是否需要的参数都存在 ------------
+* $params 为收到的参数
+* $mast_exist_parameters 为一个必须存在的变量名数组
+* ----------- 返回 [err:0, err_msg:'', data:[]] ------------
+* 如果所有必须的参数都存在，err 为 0, data 为 NULL
+* 如果缺少参数，err 为 -1, data 为 缺少的参数名数组
+*/
+function comm_check_parameters( $params, $mast_exist_parameters )
+{
+    $result = array(err => 0, err_msg => '', data => array() );
+    foreach( $mast_exist_parameters as $k => $v )
+    {
+        if( !isset($params[$k]) )
+            $result['data'][] = $k;
+    }
+
+    if( 0 < count($result['data']) )
+        $result['err'] = -1;
+    
+    return $result;
+}
+
+
 function comm_generate_guid()
 {
     if( function_exists('com_create_guid') )
