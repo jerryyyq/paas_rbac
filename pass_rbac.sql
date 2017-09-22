@@ -1,8 +1,8 @@
 CREATE DATABASE  IF NOT EXISTS `paas_rbac` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `paas_rbac`;
--- MySQL dump 10.13  Distrib 5.7.17, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.19, for Linux (x86_64)
 --
--- Host: localhost    Database: paas_rbac
+-- Host: 127.0.0.1    Database: paas_rbac
 -- ------------------------------------------------------
 -- Server version	5.7.19-0ubuntu0.16.04.1
 
@@ -85,13 +85,13 @@ CREATE TABLE `ac_rule_resource_privilege` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `ac_user_rule`
+-- Table structure for table `ac_user_rule_`
 --
 
-DROP TABLE IF EXISTS `ac_user_rule`;
+DROP TABLE IF EXISTS `ac_user_rule_`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `ac_user_rule` (
+CREATE TABLE `ac_user_rule_` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_user` int(11) DEFAULT NULL,
   `id_rule` int(11) DEFAULT NULL,
@@ -123,6 +123,32 @@ CREATE TABLE `enterprise` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `enterprise_admin`
+--
+
+DROP TABLE IF EXISTS `enterprise_admin`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `enterprise_admin` (
+  `id_admin` int(11) NOT NULL AUTO_INCREMENT,
+  `id_enterprise` int(11) NOT NULL COMMENT '所属企业',
+  `name` varchar(45) DEFAULT NULL,
+  `email` varchar(45) DEFAULT NULL,
+  `mobile` varchar(45) DEFAULT NULL,
+  `salt` varchar(128) DEFAULT NULL,
+  `password` varchar(512) DEFAULT NULL,
+  `real_name` varchar(128) DEFAULT NULL,
+  `state` int(11) DEFAULT '0',
+  `wx_unionid` varchar(128) DEFAULT NULL,
+  `wx_openid` varchar(128) DEFAULT NULL,
+  `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
+  `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
+  PRIMARY KEY (`id_admin`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `sys_admin`
 --
 
@@ -141,7 +167,34 @@ CREATE TABLE `sys_admin` (
   `wx_unionid` varchar(128) DEFAULT NULL,
   `wx_openid` varchar(128) DEFAULT NULL,
   `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
+  `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
   PRIMARY KEY (`id_admin`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `user_`
+--
+
+DROP TABLE IF EXISTS `user_`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_` (
+  `id_user` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) DEFAULT NULL,
+  `email` varchar(45) DEFAULT NULL,
+  `mobile` varchar(45) DEFAULT NULL,
+  `salt` varchar(128) DEFAULT NULL,
+  `password` varchar(512) DEFAULT NULL,
+  `real_name` varchar(128) DEFAULT NULL,
+  `state` int(11) DEFAULT '0',
+  `wx_unionid` varchar(128) DEFAULT NULL,
+  `wx_openid` varchar(128) DEFAULT NULL,
+  `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
+  `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
+  PRIMARY KEY (`id_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -177,4 +230,4 @@ CREATE TABLE `website` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-09-10 22:49:50
+-- Dump completed on 2017-09-22 20:28:16

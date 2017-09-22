@@ -39,7 +39,7 @@ define('PBKDF2_ITERATIONS', 1000);
 define('PBKDF2_LENGTH', 512);
 
 
-/* ------- 所有的参数都封装到 json 串中，GET 为 parameters 参数，POST 时直接为 body，也可以为 parameters 参数 ----------
+/* ------- 所有的参数都封装到 json 串中，GET 为 args 参数，POST 时直接为 body，也可以为 args 参数 ----------
 * comm_get_parameters 既可以获取 GET 时的 parameters 参数，也可以获取 POST 上来的参数
 * 
 * ------- 所有的应答返回值都封装到 json 串中，{"err":0, "err_msg":"", "data":{}} ----------
@@ -49,7 +49,7 @@ define('PBKDF2_LENGTH', 512);
 */
 function comm_get_parameters( $mast_exist_parameters )
 {
-    if( $raw_arg = @$_REQUEST['parameters'] )
+    if( $raw_arg = @$_REQUEST['args'] )
     {
         // 获取 url 后面的参数
         $url_decode_arg = urldecode($raw_arg);
