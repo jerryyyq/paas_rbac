@@ -191,7 +191,7 @@ PAAS 系统，应该有三个登录入口
 
 
 # API
-## sys_admin_login( args = ['name', 'password'] )
+## sys_admin_login( args = ['email', 'password'] )
 * 入参 args = ['email', 'password']
 * 出参中 data 为 user_info，内容为：['id_admin', 'name', 'type', ...]
     * 其中 type 为：0:sys, 1:enteprise, 2:websit
