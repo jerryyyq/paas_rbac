@@ -2,9 +2,9 @@
 require_once('./common.php');
 
 // 返回值：0 == 用户不存在；大于 0 == 用户 id；-1 == 口令错误；-2 == 帐号未激活
-function db_check_user_password( $email, $password, $table_name, $primary_key_name )
+function db_check_user_password( $table_name, $primary_key_name, $email, $password )
 {
-    $sql = "SELECT {$primary_key_name},nickname,email,salt,password,state FROM {$table_name} WHERE email = ? OR mobile = ? LIMIT 1";
+    $sql = "SELECT {$primary_key_name},name,email,salt,password,state FROM {$table_name} WHERE email = ? OR mobile = ? LIMIT 1";
     $bind_param = array($email, $email);
     $rows = db_select_data($sql, $bind_param);
     if( !isset($rows[0]) )

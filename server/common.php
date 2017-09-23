@@ -58,15 +58,17 @@ function comm_get_parameters( )
     {
         // 获取 url 后面的参数
         $url_decode_arg = urldecode($raw_arg);
+
         $input = str_replace('\\', '', $url_decode_arg);
+        logNoti( 'input is: ' . $input );
     }
     else
     {
         // 获取 body 中的参数
         $input = @file_get_contents('php://input');
-    };
-    $params = json_decode($input, true);
+    }
     
+    $params = json_decode($input, true);
     return $params; 
 }
 
@@ -79,16 +81,19 @@ function comm_get_parameters( )
 */
 function comm_check_parameters( $args, $mast_exist_parameters )
 {
-    $result = array(err => 0, err_msg => '', data => array() );
+    $result = array('err' => 0, 'err_msg' => '', 'data' => array() );
     foreach( $mast_exist_parameters as $k => $v )
     {
-        if( !isset($args[$k]) )
-            $result['data'][] = $k;
+        if( !isset($args[$v]) )
+            $result['data'][] = $v;
     }
 
     if( 0 < count($result['data']) )
+    {
         $result['err'] = -1;
-    
+        $result['err_msg'] = 'Parameter incomplete';
+    }
+
     return $result;
 }
 

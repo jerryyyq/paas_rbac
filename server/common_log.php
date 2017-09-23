@@ -3,11 +3,19 @@
 // 这下日志文件会写到文件所在目录下的 /log/ 目录下
 
 define("SPT", DIRECTORY_SEPARATOR);
+/*
 define("NOTI_FILE", dirname(__FILE__) . SPT . "log" . SPT . "noti-");
 define("ITEM_FILE", dirname(__FILE__) . SPT . "log" . SPT . "item-");
 define("DLOG_FILE", dirname(__FILE__) . SPT . "log" . SPT . "atch-");
 define("JUMP_FILE", dirname(__FILE__) . SPT . "log" . SPT . "jump-");
 define("CRASH_FILE", dirname(__FILE__) . SPT ."log" . SPT . "crash-");
+*/
+define('NOTI_FILE', '/tmp' . SPT . 'phplogs' . SPT . 'noti-');
+define('ITEM_FILE', '/tmp' . SPT . 'phplogs' . SPT . 'item-');
+define('DLOG_FILE', '/tmp' . SPT . 'phplogs' . SPT . 'atch-');
+define('JUMP_FILE', '/tmp' . SPT . 'phplogs' . SPT . 'jump-');
+define('CRASH_FILE', '/tmp' . SPT . 'phplogs' . SPT . 'crash-');
+
 
 function comm_get_user_ip()
 {
@@ -52,13 +60,13 @@ function logDateItem($log, $pre)
 
 function mkdirs($dir, $mode = 0777)
 {
-    if (is_dir($dir) || @mkdir($dir, $mode))
+    if (is_dir($dir) || mkdir($dir, $mode))
 	    return TRUE;
 
     if (!mkdirs(dirname($dir), $mode))
 	    return FALSE;
 
-    return @mkdir($dir, $mode);
+    return mkdir($dir, $mode);
 }
 
 function writeFile($filename, $data)

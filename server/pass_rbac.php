@@ -1,5 +1,6 @@
 <?php
 require_once('./common.php');
+require_once('./pass_rbac_db.php');
 
 define('COOKIE_OVER_TIME', 86400);         // session 与 cookie 过期时间：1 天过期
 
@@ -21,6 +22,7 @@ exit( 0 );
 // 主函数
 function main()
 {
+    global $allowed_funtion;
     if( 0 == comm_make_xcros() )
         return true;
 
@@ -32,12 +34,12 @@ function main()
         if( !$api_name || !in_array($api_name, $allowed_funtion) || !function_exists($api_name) )
         {
             $result['err'] = -10001;
-            $result['err_msg'] = 'api_name wrong.';
+            $result['err_msg'] = 'api_name wrong';
             break;
         }
 
-        $params = @comm_get_parameters( );
-
+        $params = comm_get_parameters( );
+        
         try
         { 
             $result = call_user_func( $api_name, $params );
@@ -51,7 +53,7 @@ function main()
         break;
     }
 
-    echo json_encode($result);
+    echo json_encode($result, JSON_UNESCAPED_UNICODE);
 }
 
 //////////////////////// session 代码 ///////////////////////////
@@ -65,15 +67,15 @@ function session_set_user_info( $user_info )
 
 function &session_get_user_info( $iduser = 0 )
 {
-    if( 0 < intval($iduser) && intval($_SESSION['iduser']) != intval($iduser) )
-        return array('iduser'=>0);
+    if( 0 < intval($iduser) && intval($_SESSION['id_user']) != intval($iduser) )
+        return array('id_user'=>0);
 
     return $_SESSION['user_info'];
 }
 
 function session_get_user_id( $type = 2 )
 {
-    return isset($_SESSION['iduser']) ? intval($_SESSION['iduser']) : 0;
+    return isset($_SESSION['id_user']) ? intval($_SESSION['id_user']) : 0;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -85,10 +87,10 @@ function sys_admin_login( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    $id_user = db_check_user_password( $name, $password, 'sys_admin', 'id_admin' );
+    $id_user = db_check_user_password( 'sys_admin', 'id_admin', $args['email'], $args['password'] );
     if( 0 < $id_user )
     {
-        $user_info = db_get_user_info( 'sys_admin', $id_user );
+        $user_info = db_get_user_info( 'sys_admin', 'id_admin', $id_user );
 
         // 存入 session
         $user_info['type'] = 0;
