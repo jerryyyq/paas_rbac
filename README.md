@@ -1,6 +1,6 @@
 # PAAS 平台通用 RBAC 管理系统
-
-
+本管理系统的目标是：针对 PAAS 平台的资源、权限、角色管理给出统一的解决方案。
+server 目录下是服务器端 PHP 代码与数据库建库脚本
 
 ## 平台结构说明
 ```
@@ -187,7 +187,17 @@ PAAS 系统，应该有三个登录入口
 企业管理员登录帐号必须全局唯一
 
 ## 最终用户归属
-用户只能属于某个 web 站点，所以，每个 web 站点需要有一套：用户表、RBAC。
+用户只能属于某个 web 站点，所以，每个 web 站点需要有一套：user_'网站的 id_website' 和 ac_user_rule_'网站的 id_website' 表。
+
+
+# API
+## sys_admin_login( args = ['name', 'password'] )
+* 入参 args = ['email', 'password']
+* 出参中 data 为 user_info，内容为：['id_admin', 'name', 'type', ...]
+    * 其中 type 为：0:sys, 1:enteprise, 2:websit
+
+
+
 
 
 # 附录：常用制表符

@@ -4,7 +4,7 @@ define('SERVER_DOMAIN_URL', 'https://w.xxguan.cn/'); // 'https://w.xxguan.cn/' '
 define('DB_HOST', '127.0.0.1');
 define('DB_USER', 'root');
 define('DB_PASS', 'yyqet');                 // youlian password is: root
-define('DB_NAME', 'novelDB');           // 1999youlian
+define('DB_NAME', 'pass_rbac');           // 1999youlian
 // define('APPID', 'wxc1283d537c2a0b44');   // 1999youlian
 // define('APPSECRET', 'b9e8d54e9f345ad7ab3b599722573f9a');
 

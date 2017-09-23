@@ -1,5 +1,10 @@
 <?php
-// by yangyuqi at 2017-07-09
+// Author: 杨玉奇
+// email: yangyuqi@sina.com
+// url: https://github.com/jerryyyq/tf_algorithm_example
+// copyright yangyuqi
+// 著作权归作者 杨玉奇 所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+// date: 2017-09-22
 
 /** php.ini 配置
 * 1 使用 PDO
@@ -47,7 +52,7 @@ define('PBKDF2_LENGTH', 512);
 * err_msg 为具体错误信息
 * data 为返回的数据
 */
-function comm_get_parameters( $mast_exist_parameters )
+function comm_get_parameters( )
 {
     if( $raw_arg = @$_REQUEST['args'] )
     {
@@ -72,12 +77,12 @@ function comm_get_parameters( $mast_exist_parameters )
 * 如果所有必须的参数都存在，err 为 0, data 为 NULL
 * 如果缺少参数，err 为 -1, data 为 缺少的参数名数组
 */
-function comm_check_parameters( $params, $mast_exist_parameters )
+function comm_check_parameters( $args, $mast_exist_parameters )
 {
     $result = array(err => 0, err_msg => '', data => array() );
     foreach( $mast_exist_parameters as $k => $v )
     {
-        if( !isset($params[$k]) )
+        if( !isset($args[$k]) )
             $result['data'][] = $k;
     }
 
