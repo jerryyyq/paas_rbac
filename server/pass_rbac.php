@@ -81,22 +81,23 @@ function session_get_user_id( $type = 2 )
 ///////////////////////////////////////////////////////////////////////
 // 功能实现
 ///////////////////////////////////////////////////////////////////////
-function sys_admin_login( $args )
+function __do_login( $table_name, $primary_key_name, $email, $password )
 {
-    $result = comm_check_parameters( $args, array('email', 'password') );
-    if( 0 != $result['err'] )
-        return $result;
-
-    $id_user = db_check_user_password( 'sys_admin', 'id_admin', $args['email'], $args['password'] );
+    $id_user = db_check_user_password( $table_name, $primary_key_name, $email, $password );
     if( 0 < $id_user )
     {
-        $user_info = db_get_user_info( 'sys_admin', 'id_admin', $id_user );
+        $user_info = db_get_user_info( $table_name, $primary_key_name, $id_user );
 
         // 存入 session
-        $user_info['type'] = 0;
+        $user_info['type'] = 2;
+        if( 'sys_admin' === $table_name )
+            $user_info['type'] = 0;
+        else if( 'enterprise_admin' === $table_name )
+            $user_info['type'] = 1;
+
         session_set_user_info( $user_info );
 
-        $result['data'] = $user_info;
+        $result['user_info'] = $user_info;
     }
     else if( 0 === $id_user )
     {
@@ -111,11 +112,76 @@ function sys_admin_login( $args )
     else if( -2 === $id_user )
     {
         $result['err'] = -1;
-        $result['err_msg'] = '帐号未激活,请到邮箱激活';        
+        $result['err_msg'] = '帐号未激活,请到邮箱激活';
     }
+
+    return $result;    
+}
+
+function sys_admin_login( $args )
+{
+    $result = comm_check_parameters( $args, array('email', 'password') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result = __do_login( 'sys_admin', 'id_admin', $args['email'], $args['password'] );
+
+    // 获得权限信息
+    $resource_privilege = db_get_user_resource_privilege( 'ac_sys_admin_rule', 'id_admin',  $result['user_info']['id_admin']);
+    $_SESSION['resource_privilege'] = $resource_privilege;
+    $result['resource_privilege'] = $resource_privilege;
 
     return $result;
 }
+
+function enterprise_admin_login( $args )
+{
+    $result = comm_check_parameters( $args, array('symbol_name', 'email', 'password') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
+    $_SESSION['enterprise_info'] = $enterprise_info;
+
+    $result = __do_login( 'enterprise_admin', 'id_admin', $args['email'], $args['password'] );
+
+    // 获得权限信息
+    $resource_privilege = db_get_user_resource_privilege( 'ac_enterprise_admin_rule', 'id_admin',  $result['user_info']['id_admin']);
+    $_SESSION['resource_privilege'] = $resource_privilege;
+    $result['resource_privilege'] = $resource_privilege;
+
+    return $result;
+}
+
+function user_login( $args )
+{
+    $result = comm_check_parameters( $args, array('symbol_name', 'email', 'password') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $website_info = db_get_website_info( $args['symbol_name'] );
+    if( 1 > $website_info['id_website'] )
+    {
+        $result['err'] = -5;
+        $result['err_msg'] = 'symbol_name err';
+        return $result;
+    }
+
+    $_SESSION['website_info'] = $website_info;
+
+    $table_name = 'user_' . $website_info['id_website'];
+    $result = __do_login( $table_name, 'id_user', $args['email'], $args['password'] );
+
+    // 获得权限信息
+    $table_name = 'ac_user_rule_' . $website_info['id_website'];
+    $resource_privilege = db_get_user_resource_privilege( $table_name, 'id_user',  $result['user_info']['id_user']);
+    $_SESSION['resource_privilege'] = $resource_privilege;
+    $result['resource_privilege'] = $resource_privilege;
+
+    return $result;
+}
+
+
 
 
 

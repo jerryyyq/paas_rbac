@@ -85,8 +85,41 @@ CREATE TABLE `ac_rule_resource_privilege` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `ac_sys_admin_rule`
+--
+
+DROP TABLE IF EXISTS `ac_sys_admin_rule`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ac_sys_admin_rule` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_admin` int(11) DEFAULT NULL,
+  `id_rule` int(11) DEFAULT NULL,
+  `description` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ac_enterprise_admin_rule`
+--
+
+DROP TABLE IF EXISTS `ac_enterprise_admin_rule`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ac_enterprise_admin_rule` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_admin` int(11) DEFAULT NULL,
+  `id_rule` int(11) DEFAULT NULL,
+  `description` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `ac_user_rule_`
 --
+
 
 DROP TABLE IF EXISTS `ac_user_rule_`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
