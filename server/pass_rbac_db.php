@@ -112,6 +112,16 @@ function db_get_user_resource_privilege( $table_name, $primary_key_name, $id_use
         return array( );
 
     return $rows[0];
-｝
+}
+
+function db_enterprise_add( $args )
+{
+    return db_insert_data( 'enterprise', array('symbol_name', 'real_name', 'country', 'province', 'address', 'zipcode', 'description'),
+        array($args['symbol_name'], $args['real_name'], $args['country'], $args['province'], $args['address'], $args['zipcode'], $args['description']) );
+}
+
+
+
+
 
 ?>

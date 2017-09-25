@@ -8,6 +8,8 @@ $allowed_funtion = array(
     'sys_admin_login',
     'enterprise_admin_login',
     'user_login',
+
+    'enterprise_add',
 );
 
 //////////////////////// 开始主功能 ///////////////////////////
@@ -181,6 +183,37 @@ function user_login( $args )
     return $result;
 }
 
+function enterprise_symbol_name_exist( $args )
+{
+    $result = comm_check_parameters( $args, array('symbol_name') );
+    if( 0 != $result['err'] )
+        return $result;
+    
+    $result['exist'] = 0;
+    $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
+    if( 0 < int($enterprise_info['id_enterprise']) )
+        $result['exist'] = 1;
+
+    return $result;
+}
+
+function enterprise_add( $args )
+{
+    $result = comm_check_parameters( $args, array('symbol_name', 'real_name') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
+    if( 0 < int($enterprise_info['id_enterprise']) )
+    {
+        $result['err'] = -2;
+        $result['err_msg'] = '符号名已存在，请换一个';
+        return $result;
+    }
+
+    $result['id_enterprise'] = db_enterprise_add( $args );
+    return $result;
+}
 
 
 
