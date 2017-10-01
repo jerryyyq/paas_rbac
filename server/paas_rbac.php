@@ -1,10 +1,11 @@
 <?php
 require_once('./common.php');
-require_once('./pass_rbac_db.php');
+require_once('./paas_rbac_db.php');
 
 define('COOKIE_OVER_TIME', 86400);         // session 与 cookie 过期时间：1 天过期
 
 $allowed_funtion = array(
+    'test',
     'sys_admin_login',
     'enterprise_admin_login',
     'user_login',
@@ -83,6 +84,7 @@ function session_get_user_id( $type = 2 )
 ///////////////////////////////////////////////////////////////////////
 // 功能实现
 ///////////////////////////////////////////////////////////////////////
+
 function __do_login( $table_name, $primary_key_name, $email, $password )
 {
     $id_user = db_check_user_password( $table_name, $primary_key_name, $email, $password );
@@ -118,6 +120,17 @@ function __do_login( $table_name, $primary_key_name, $email, $password )
     }
 
     return $result;    
+}
+
+
+///////////////////////////////////////////////////////////////////////
+// 接口函数实现
+///////////////////////////////////////////////////////////////////////
+function test( $args )
+{
+    $result = array( 'err' => 0, 'err_msg' => '', 'data' => 'Hello Pass_rbac!' );
+    $result['args'] = $args;
+    return $result;
 }
 
 function sys_admin_login( $args )
