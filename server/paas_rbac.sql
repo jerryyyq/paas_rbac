@@ -2,9 +2,9 @@ CREATE DATABASE  IF NOT EXISTS `paas_rbac` /*!40100 DEFAULT CHARACTER SET utf8 *
 USE `paas_rbac`;
 -- MySQL dump 10.13  Distrib 5.7.19, for Linux (x86_64)
 --
--- Host: 127.0.0.1    Database: paas_rbac
+-- Host: localhost    Database: paas_rbac
 -- ------------------------------------------------------
--- Server version	5.7.19-0ubuntu0.16.04.1
+-- Server version	5.7.19-0ubuntu0.17.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -16,6 +16,31 @@ USE `paas_rbac`;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `ac_enterprise_admin_rule`
+--
+
+DROP TABLE IF EXISTS `ac_enterprise_admin_rule`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ac_enterprise_admin_rule` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_admin` int(11) DEFAULT NULL,
+  `id_rule` int(11) DEFAULT NULL,
+  `description` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ac_enterprise_admin_rule`
+--
+
+LOCK TABLES `ac_enterprise_admin_rule` WRITE;
+/*!40000 ALTER TABLE `ac_enterprise_admin_rule` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ac_enterprise_admin_rule` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `ac_privilege`
@@ -32,6 +57,15 @@ CREATE TABLE `ac_privilege` (
   PRIMARY KEY (`id_privilege`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ac_privilege`
+--
+
+LOCK TABLES `ac_privilege` WRITE;
+/*!40000 ALTER TABLE `ac_privilege` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ac_privilege` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `ac_resource`
@@ -51,6 +85,15 @@ CREATE TABLE `ac_resource` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `ac_resource`
+--
+
+LOCK TABLES `ac_resource` WRITE;
+/*!40000 ALTER TABLE `ac_resource` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ac_resource` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `ac_rule`
 --
 
@@ -66,6 +109,15 @@ CREATE TABLE `ac_rule` (
   PRIMARY KEY (`id_rule`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ac_rule`
+--
+
+LOCK TABLES `ac_rule` WRITE;
+/*!40000 ALTER TABLE `ac_rule` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ac_rule` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `ac_rule_resource_privilege`
@@ -85,6 +137,15 @@ CREATE TABLE `ac_rule_resource_privilege` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `ac_rule_resource_privilege`
+--
+
+LOCK TABLES `ac_rule_resource_privilege` WRITE;
+/*!40000 ALTER TABLE `ac_rule_resource_privilege` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ac_rule_resource_privilege` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `ac_sys_admin_rule`
 --
 
@@ -101,25 +162,17 @@ CREATE TABLE `ac_sys_admin_rule` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `ac_enterprise_admin_rule`
+-- Dumping data for table `ac_sys_admin_rule`
 --
 
-DROP TABLE IF EXISTS `ac_enterprise_admin_rule`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `ac_enterprise_admin_rule` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `id_admin` int(11) DEFAULT NULL,
-  `id_rule` int(11) DEFAULT NULL,
-  `description` varchar(256) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
+LOCK TABLES `ac_sys_admin_rule` WRITE;
+/*!40000 ALTER TABLE `ac_sys_admin_rule` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ac_sys_admin_rule` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `ac_user_rule_`
 --
-
 
 DROP TABLE IF EXISTS `ac_user_rule_`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -132,6 +185,44 @@ CREATE TABLE `ac_user_rule_` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ac_user_rule_`
+--
+
+LOCK TABLES `ac_user_rule_` WRITE;
+/*!40000 ALTER TABLE `ac_user_rule_` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ac_user_rule_` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admin_operation_log`
+--
+
+DROP TABLE IF EXISTS `admin_operation_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `admin_operation_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_admin` int(11) NOT NULL,
+  `id_enterprise` int(11) DEFAULT '0' COMMENT '所属企业 id。0 表示是系统管理员。',
+  `action` varchar(45) NOT NULL COMMENT '动作，例如：add, create, delete, disable, enable...',
+  `target_id` int(11) DEFAULT NULL COMMENT '被操作者 id',
+  `target_type` int(11) DEFAULT NULL COMMENT '被操作者类型',
+  `description` varchar(256) DEFAULT NULL,
+  `operation_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admin_operation_log`
+--
+
+LOCK TABLES `admin_operation_log` WRITE;
+/*!40000 ALTER TABLE `admin_operation_log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admin_operation_log` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `enterprise`
@@ -154,6 +245,15 @@ CREATE TABLE `enterprise` (
   PRIMARY KEY (`id_enterprise`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `enterprise`
+--
+
+LOCK TABLES `enterprise` WRITE;
+/*!40000 ALTER TABLE `enterprise` DISABLE KEYS */;
+/*!40000 ALTER TABLE `enterprise` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `enterprise_admin`
@@ -182,6 +282,15 @@ CREATE TABLE `enterprise_admin` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `enterprise_admin`
+--
+
+LOCK TABLES `enterprise_admin` WRITE;
+/*!40000 ALTER TABLE `enterprise_admin` DISABLE KEYS */;
+/*!40000 ALTER TABLE `enterprise_admin` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sys_admin`
 --
 
@@ -205,6 +314,15 @@ CREATE TABLE `sys_admin` (
   PRIMARY KEY (`id_admin`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sys_admin`
+--
+
+LOCK TABLES `sys_admin` WRITE;
+/*!40000 ALTER TABLE `sys_admin` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sys_admin` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `user_`
@@ -232,6 +350,15 @@ CREATE TABLE `user_` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `user_`
+--
+
+LOCK TABLES `user_` WRITE;
+/*!40000 ALTER TABLE `user_` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `website`
 --
 
@@ -253,6 +380,15 @@ CREATE TABLE `website` (
   CONSTRAINT `fk_website_1` FOREIGN KEY (`id_enterprise`) REFERENCES `enterprise` (`id_enterprise`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `website`
+--
+
+LOCK TABLES `website` WRITE;
+/*!40000 ALTER TABLE `website` DISABLE KEYS */;
+/*!40000 ALTER TABLE `website` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -263,4 +399,4 @@ CREATE TABLE `website` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-09-22 20:28:16
+-- Dump completed on 2017-10-14 23:29:55

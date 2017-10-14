@@ -156,6 +156,13 @@ function enterprise_admin_login( $args )
         return $result;
 
     $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
+    if( 1 > $enterprise_info['id_enterprise'] )
+    {
+        $result['err'] = -5;
+        $result['err_msg'] = '企业符号名不存在';
+        return $result;
+    }
+
     $_SESSION['enterprise_info'] = $enterprise_info;
 
     $result = __do_login( 'enterprise_admin', 'id_admin', $args['email'], $args['password'] );
@@ -178,7 +185,7 @@ function user_login( $args )
     if( 1 > $website_info['id_website'] )
     {
         $result['err'] = -5;
-        $result['err_msg'] = 'symbol_name err';
+        $result['err_msg'] = '站点符号名不存在';
         return $result;
     }
 
@@ -216,6 +223,9 @@ function enterprise_add( $args )
     if( 0 != $result['err'] )
         return $result;
 
+    // 检查当前管理员是否有权限
+
+
     $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
     if( 0 < int($enterprise_info['id_enterprise']) )
     {
@@ -225,6 +235,10 @@ function enterprise_add( $args )
     }
 
     $result['id_enterprise'] = db_enterprise_add( $args );
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'add', $result['id_enterprise'], 100, '添加企业：' . $args['symbol_name'] );
+
     return $result;
 }
 

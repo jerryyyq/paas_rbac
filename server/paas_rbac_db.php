@@ -116,11 +116,18 @@ function db_get_user_resource_privilege( $table_name, $primary_key_name, $id_use
 
 function db_enterprise_add( $args )
 {
-    return db_insert_data( 'enterprise', array('symbol_name', 'real_name', 'country', 'province', 'address', 'zipcode', 'description'),
-        array($args['symbol_name'], $args['real_name'], $args['country'], $args['province'], $args['address'], $args['zipcode'], $args['description']) );
+    return db_insert_data( 'enterprise', 
+        array('symbol_name', 'real_name', 'country', 'province', 'address', 'zipcode', 'description'),
+        array($args['symbol_name'], $args['real_name'], $args['country'], $args['province'],
+        $args['address'], $args['zipcode'], $args['description']) );
 }
 
-
+function db_add_admin_operation_log( $id_admin, $id_enterprise, $action, $target_id, $target_type, $description )
+{
+    return db_insert_data( 'admin_operation_log', 
+        array('id_admin', 'id_enterprise', 'action', 'target_id', 'target_type', 'description'),
+        array($id_admin, $id_enterprise, $action, $target_id, $target_type, $description) );
+}
 
 
 
