@@ -102,17 +102,37 @@ function db_get_website_info( $symbol_name, $id_website = 0 )
 
 function db_get_user_resource_privilege( $table_name, $primary_key_name, $id_user )
 {
-    $sql = "SELECT A.* FROM ac_rule_resource_privilege AS A, {$table_name} AS B 
-            WHERE A.id_rule = B.id_rule AND B.{$primary_key_name} ＝ ？";
+    $sql = "SELECT C.* FROM ac_rule_resource_privilege AS C, {$table_name} AS D 
+            WHERE C.id_rule = D.id_rule AND D.{$primary_key_name} = ?";
     
     $bind_param = array( $id_user );
 
     $rows = db_select_data($sql, $bind_param);
-    if( !isset($rows[0]) )
-        return array( );
 
-    return $rows[0];
+    $user_privilege['resource_privilege'] = $rows;
+
+    $privilege = [];
+    foreach( $rows as $row )
+    {
+        $privilege[] = $row['id_privilege'];
+    }
+
+    $user_privilege['privileges'] = db_expand_all_privilege( $privilege );
+
+    return $user_privilege;
 }
+
+// 展开权限：添加所有的子权限。只做一级子权限查找，不会递归查找孙权限。
+// 入参为：[id_privilege, id_privilege...]
+// 返回值为：ac_privilege 表的多条记录
+function db_expand_all_privilege( $privilege )
+{
+    $id_privilege_str = implode(',', $privilege);
+    $sql = "SELECT * FROM ac_privilege WHERE id_privilege IN ({$id_privilege_str}) OR id_father IN ({$id_privilege_str})";
+
+    return db_select_data($sql);
+}
+
 
 function db_enterprise_add( $args )
 {

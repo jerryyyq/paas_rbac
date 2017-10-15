@@ -30,8 +30,12 @@ function db_close_Connect( )
 
 function db_execute_sql(&$stmt, $sql, $bind_param = array() )
 {
-    // echo $sql;
-    // print_r($bind_param);
+    global $debug;
+    if( $debug )
+    {
+        echo $sql, "\n";
+        print_r($bind_param);
+    }
 
     $stmt = db_get_Connect()->prepare($sql);
     $bool = false;

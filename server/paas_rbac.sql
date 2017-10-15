@@ -55,7 +55,7 @@ CREATE TABLE `ac_privilege` (
   `name` varchar(128) DEFAULT NULL,
   `show_name` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id_privilege`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -64,6 +64,7 @@ CREATE TABLE `ac_privilege` (
 
 LOCK TABLES `ac_privilege` WRITE;
 /*!40000 ALTER TABLE `ac_privilege` DISABLE KEYS */;
+INSERT INTO `ac_privilege` VALUES (1,0,'sys_admin_manage','管理系统管理员'),(2,1,'sys_admin_add','添加系统管理员'),(3,1,'sys_admin_delete','删除系统管理员'),(4,1,'sys_admin_modify','修改系统管理员信息'),(5,1,'sys_admin_read','查看系统管理员信息'),(6,0,'sys_log_read','查看系统日志'),(7,0,'enterprise_manage','管理企业'),(8,7,'enterprise_add','添加企业'),(9,7,'enterprise_delete','删除企业'),(10,7,'enterprise_modify','修改企业信息'),(11,7,'enterprise_read','查看企业信息'),(12,0,'enterprise_admin_manage','管理企业管理员'),(13,12,'enterprise_admin_add','添加企业管理员'),(14,12,'enterprise_admin_delete','删除企业管理员'),(15,12,'enterprise_admin_modify','修改企业管理员信息'),(16,12,'enterprise_admin_read','查看企业管理员信息'),(17,0,'web_manage','管理站点'),(18,17,'web_add','添加站点'),(19,17,'web_delete','删除站点'),(20,17,'web_modify','修改站点信息'),(21,17,'web_read','查看站点信息'),(22,0,'user_manage','用户管理'),(23,22,'user_add','添加用户'),(24,22,'user_delete','删除用户'),(25,22,'user_modify','修改用户信息'),(26,22,'user_read','查看用户信息'),(27,0,'channel_manage','渠道管理'),(28,27,'channel_add','添加渠道'),(29,27,'channel_delete','删除渠道'),(30,27,'channel_modify','修改渠道信息'),(31,27,'channel_read','查看渠道信息');
 /*!40000 ALTER TABLE `ac_privilege` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -107,7 +108,7 @@ CREATE TABLE `ac_rule` (
   `show_name` varchar(128) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`id_rule`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -116,6 +117,7 @@ CREATE TABLE `ac_rule` (
 
 LOCK TABLES `ac_rule` WRITE;
 /*!40000 ALTER TABLE `ac_rule` DISABLE KEYS */;
+INSERT INTO `ac_rule` VALUES (1,0,'all','超级管理员','拥有系统所有管理权限');
 /*!40000 ALTER TABLE `ac_rule` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -133,7 +135,7 @@ CREATE TABLE `ac_rule_resource_privilege` (
   `id_privilege` int(11) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -142,6 +144,7 @@ CREATE TABLE `ac_rule_resource_privilege` (
 
 LOCK TABLES `ac_rule_resource_privilege` WRITE;
 /*!40000 ALTER TABLE `ac_rule_resource_privilege` DISABLE KEYS */;
+INSERT INTO `ac_rule_resource_privilege` VALUES (1,1,0,1,'all 角色拥有 sys_admin_manage 权限'),(2,1,0,6,'all 角色拥有 sys_log_read 权限'),(3,1,0,7,'all 角色拥有 enterprise_manage 权限'),(4,1,0,12,'all 角色拥有 enterprise_admin_manage 权限'),(5,1,0,17,'all 角色拥有 web_manage 权限'),(6,1,0,22,'all 角色拥有 user_manage 权限'),(7,1,0,27,'all 角色拥有 channel_manage 权限');
 /*!40000 ALTER TABLE `ac_rule_resource_privilege` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -158,7 +161,7 @@ CREATE TABLE `ac_sys_admin_rule` (
   `id_rule` int(11) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -167,6 +170,7 @@ CREATE TABLE `ac_sys_admin_rule` (
 
 LOCK TABLES `ac_sys_admin_rule` WRITE;
 /*!40000 ALTER TABLE `ac_sys_admin_rule` DISABLE KEYS */;
+INSERT INTO `ac_sys_admin_rule` VALUES (1,1,1,'系统初始超级管理员拥有系统的所有初始权限');
 /*!40000 ALTER TABLE `ac_sys_admin_rule` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -312,7 +316,7 @@ CREATE TABLE `sys_admin` (
   `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
   `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
   PRIMARY KEY (`id_admin`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -321,7 +325,36 @@ CREATE TABLE `sys_admin` (
 
 LOCK TABLES `sys_admin` WRITE;
 /*!40000 ALTER TABLE `sys_admin` DISABLE KEYS */;
+INSERT INTO `sys_admin` VALUES (1,'admin','admin@system','13240269288',NULL,NULL,NULL,0,NULL,NULL,'2017-10-15 16:03:58',NULL,NULL);
 /*!40000 ALTER TABLE `sys_admin` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `third_party_channel`
+--
+
+DROP TABLE IF EXISTS `third_party_channel`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `third_party_channel` (
+  `id_channel` int(11) NOT NULL,
+  `name` varchar(256) DEFAULT NULL,
+  `Identification_code` varchar(256) DEFAULT NULL COMMENT '唯一识别码',
+  `channel_url` varchar(512) DEFAULT NULL COMMENT '第三方渠道的网站 URL',
+  `sharing_ratio` float DEFAULT NULL COMMENT '收入分成比例',
+  `state` int(11) DEFAULT '0',
+  `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_channel`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `third_party_channel`
+--
+
+LOCK TABLES `third_party_channel` WRITE;
+/*!40000 ALTER TABLE `third_party_channel` DISABLE KEYS */;
+/*!40000 ALTER TABLE `third_party_channel` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -340,11 +373,15 @@ CREATE TABLE `user_` (
   `password` varchar(512) DEFAULT NULL,
   `real_name` varchar(128) DEFAULT NULL,
   `state` int(11) DEFAULT '0',
+  `id_channel` int(11) DEFAULT '0' COMMENT '是从哪个渠道加过来的。0 为非渠道用户。',
+  `oauth_platform_type` varchar(128) DEFAULT NULL COMMENT '第三方登录平台类型。‘’ 和 ‘0’ 表示没有第三方登录平台关联帐号；‘1’ 是微信 unionid；‘2’是微信 openid；''3''是 QQ；‘4’是新浪；',
   `wx_unionid` varchar(128) DEFAULT NULL,
   `wx_openid` varchar(128) DEFAULT NULL,
-  `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `qq_openid` varchar(128) DEFAULT NULL,
+  `sina_openid` varchar(128) DEFAULT NULL,
   `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
   `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
+  `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -399,4 +436,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-10-14 23:29:55
+-- Dump completed on 2017-10-15 19:20:55

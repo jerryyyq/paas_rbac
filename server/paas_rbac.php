@@ -1,4 +1,9 @@
 <?php
+// 作者：杨玉奇
+// 命令行调试： $ php paas_rbac.php debug
+// php 命令行交互测试：$ php -a
+
+
 require_once('./common.php');
 require_once('./paas_rbac_db.php');
 
@@ -19,8 +24,13 @@ session_start();
 if( isset($_COOKIE['PHPSESSID']) )
     setcookie( 'PHPSESSID', session_id(), time() + COOKIE_OVER_TIME );
 
-main();
-exit( 0 );
+$debug = in_array('debug', $argv);
+
+if( !$debug )
+{
+    main();
+    exit( 0 );
+}
 
 // 主函数
 function main()
@@ -63,15 +73,15 @@ function main()
 function session_set_user_info( $user_info )
 {
     $_SESSION['user_info'] = $user_info;
-    $_SESSION['id_user'] = $user_info[0];
+    $_SESSION['id_user'] = reset( $user_info );
 
-    setcookie('id_user', $user_info[0], time() + COOKIE_OVER_TIME);
+    setcookie('id_user', $_SESSION['id_user'], time() + COOKIE_OVER_TIME);
 }
 
 function &session_get_user_info( $iduser = 0 )
 {
     if( 0 < intval($iduser) && intval($_SESSION['id_user']) != intval($iduser) )
-        return array('id_user'=>0);
+        return array('id_user' => 0);
 
     return $_SESSION['user_info'];
 }
@@ -87,10 +97,15 @@ function session_get_user_id( $type = 2 )
 
 function __do_login( $table_name, $primary_key_name, $email, $password )
 {
+    global $debug;
     $id_user = db_check_user_password( $table_name, $primary_key_name, $email, $password );
     if( 0 < $id_user )
     {
         $user_info = db_get_user_info( $table_name, $primary_key_name, $id_user );
+        if( $debug )
+        {
+            print_r( $user_info );
+        }
 
         // 存入 session
         $user_info['type'] = 2;
@@ -122,6 +137,16 @@ function __do_login( $table_name, $primary_key_name, $email, $password )
     return $result;    
 }
 
+function __have_privilege( $user_privilege, $privilege_name )
+{
+    foreach( $user_privilege['privileges'] as $row )
+    {
+        if( $row['name'] === $privilege_name )
+            return true;
+    }
+
+    return false;
+}
 
 ///////////////////////////////////////////////////////////////////////
 // 接口函数实现
@@ -142,9 +167,9 @@ function sys_admin_login( $args )
     $result = __do_login( 'sys_admin', 'id_admin', $args['email'], $args['password'] );
 
     // 获得权限信息
-    $resource_privilege = db_get_user_resource_privilege( 'ac_sys_admin_rule', 'id_admin',  $result['user_info']['id_admin']);
-    $_SESSION['resource_privilege'] = $resource_privilege;
-    $result['resource_privilege'] = $resource_privilege;
+    $user_privilege = db_get_user_resource_privilege( 'ac_sys_admin_rule', 'id_admin',  $result['user_info']['id_admin']);
+    $_SESSION['user_privilege'] = $user_privilege;
+    $result['user_privilege'] = $user_privilege;
 
     return $result;
 }
@@ -158,7 +183,7 @@ function enterprise_admin_login( $args )
     $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
     if( 1 > $enterprise_info['id_enterprise'] )
     {
-        $result['err'] = -5;
+        $result['err'] = -101;
         $result['err_msg'] = '企业符号名不存在';
         return $result;
     }
@@ -168,9 +193,9 @@ function enterprise_admin_login( $args )
     $result = __do_login( 'enterprise_admin', 'id_admin', $args['email'], $args['password'] );
 
     // 获得权限信息
-    $resource_privilege = db_get_user_resource_privilege( 'ac_enterprise_admin_rule', 'id_admin',  $result['user_info']['id_admin']);
-    $_SESSION['resource_privilege'] = $resource_privilege;
-    $result['resource_privilege'] = $resource_privilege;
+    $user_privilege = db_get_user_resource_privilege( 'ac_enterprise_admin_rule', 'id_admin',  $result['user_info']['id_admin']);
+    $_SESSION['user_privilege'] = $user_privilege;
+    $result['user_privilege'] = $user_privilege;
 
     return $result;
 }
@@ -184,7 +209,7 @@ function user_login( $args )
     $website_info = db_get_website_info( $args['symbol_name'] );
     if( 1 > $website_info['id_website'] )
     {
-        $result['err'] = -5;
+        $result['err'] = -101;
         $result['err_msg'] = '站点符号名不存在';
         return $result;
     }
@@ -196,9 +221,9 @@ function user_login( $args )
 
     // 获得权限信息
     $table_name = 'ac_user_rule_' . $website_info['id_website'];
-    $resource_privilege = db_get_user_resource_privilege( $table_name, 'id_user',  $result['user_info']['id_user']);
-    $_SESSION['resource_privilege'] = $resource_privilege;
-    $result['resource_privilege'] = $resource_privilege;
+    $user_privilege = db_get_user_resource_privilege( $table_name, 'id_user',  $result['user_info']['id_user']);
+    $_SESSION['user_privilege'] = $user_privilege;
+    $result['user_privilege'] = $user_privilege;
 
     return $result;
 }
@@ -224,12 +249,17 @@ function enterprise_add( $args )
         return $result;
 
     // 检查当前管理员是否有权限
-
+    if( !__have_privilege($_SESSION['user_privilege'], 'enterprise_add') )
+    {
+        $result['err'] = -2;
+        $result['err_msg'] = '没有相应权限';
+        return $result;
+    }
 
     $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
     if( 0 < int($enterprise_info['id_enterprise']) )
     {
-        $result['err'] = -2;
+        $result['err'] = -102;
         $result['err_msg'] = '符号名已存在，请换一个';
         return $result;
     }
@@ -243,6 +273,11 @@ function enterprise_add( $args )
 }
 
 
+if( $debug )
+{
+    $result = sys_admin_login( array('email' => 'admin@system', 'password' => '') );
+    print_r($result);
 
-
+    echo '是否具有权限 enterprise_add：', __have_privilege( $result['user_privilege'], 'enterprise_add' ), "\n";
+}
 ?>

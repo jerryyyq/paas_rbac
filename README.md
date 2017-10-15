@@ -158,9 +158,15 @@ server 目录下是服务器端 PHP 代码与数据库建库脚本
 * 所有的入参都封装到 json 串中，GET 为 args 参数，POST 时直接为 body，也可以为 args 参数
     * 统一的 URL 为 https://www.xxxxx.com/pass_rbac.php?m=some_api_name&args={"a":aaa,"b":bbb}
 * 所有的应答返回值都封装到 json 串中，{"err":0, "err_msg":"", "data":{}}
-    * err 为应答码，0 表示成功，其它值表示失败
+    * err 为应答码，0 表示成功，其它值表示失败。应用错误码从 -100 开始。
     * err_msg 为具体错误信息
     * data 为返回的数据，具体名称由各自的数据决定
+* 系统错误码
+| 错误码 | 含义 |
+| ---- | ---- |
+| 0 | 成功 |
+| -1 | 参数错误 |
+| -2 | 没有相应权限 |
 
 ## 系统登录入口
 PAAS 系统，应该有三个登录入口
@@ -173,7 +179,7 @@ PAAS 系统，应该有三个登录入口
 3. 最终用户登录入口
 * m=user_login
 * 入参：网站符号名，用户名，口令
-4. 出参：{ "err":0, "err_msg":"", "user_info":{}，“resource_privilege”:[] }
+4. 出参：{ "err":0, "err_msg":"", "user_info":{}, user_privilege:['resource_privilege', 'privileges'] }
 
 ## 系统管理员
 系统管理员用于管理整个系统，他们可以按 "系统 RBAC" 进行分权。
