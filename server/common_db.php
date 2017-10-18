@@ -88,3 +88,39 @@ function db_insert_data( $table, $fields, $values )
 
     return db_get_Connect()->lastInsertId();
 }
+
+function db_update_data_ex( $table, $row, $primary_key_name )
+{
+    $where = $primary_key_name . ' = ?';
+    $fields = [];
+    $values = [];
+
+    foreach( $row as $key => $value )
+    {
+        if( $key === $primary_key_name )
+            continue;
+
+        $fields[] = $key;
+        $values[] = $value;
+    }
+
+    return db_update_data( $table, $fields, $where, $values );
+}
+
+function db_insert_data_ex( $table, &$row, $primary_key_name )
+{
+    $fields = [];
+    $values = [];
+
+    foreach( $row as $key => $value )
+    {
+        if( $key === $primary_key_name )
+            continue;
+
+        $fields[] = $key;
+        $values[] = $value;
+    }
+
+    $row[$primary_key_name] = db_insert_data( $table, $fields, $values );
+    return $row[$primary_key_name];
+}

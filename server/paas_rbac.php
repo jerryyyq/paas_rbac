@@ -139,10 +139,37 @@ function __do_login( $table_name, $primary_key_name, $email, $password )
 
 function __have_privilege( $user_privilege, $privilege_name )
 {
-    foreach( $user_privilege['privileges'] as $row )
+    foreach( $user_privilege['privileges'] as $key => $row )
     {
         if( $row['name'] === $privilege_name )
+            return (int)$key;
+    }
+
+    return -1;
+}
+
+function __have_resource_privilege( $user_privilege, $id_resource, $privilege_name )
+{
+    global $debug;
+    $key = __have_privilege( $user_privilege, $privilege_name );
+    if( 0 > $key )
+        return false;
+
+    $privilege = $user_privilege['privileges'][$key];
+    if( $debug )
+    {
+        echo 'privilege: ';
+        print_r($privilege);
+    }
+
+    foreach( $user_privilege['resource_privilege'] as $row )
+    {
+        if( $row['id_resource'] === $id_resource and 
+            ( $row['id_privilege'] === $privilege['id_privilege'] or $row['id_privilege'] === $privilege['id_father'] )
+        )
+        {
             return true;
+        }   
     }
 
     return false;
@@ -228,6 +255,22 @@ function user_login( $args )
     return $result;
 }
 
+// 检查当前用户是否有某个权限
+function have_privilege( $privilege_name )
+{
+    $key = __have_privilege($_SESSION['user_privilege'], $privilege_name);
+    if( 0 > $key )
+        return false;
+    else
+        return true;
+}
+
+// 检查当前用户是否有某个资源的权限
+function have_resource_privilege( $id_resource, $privilege_name )
+{
+    return __have_resource_privilege($_SESSION['user_privilege'], $id_resource, $privilege_name);
+}
+
 function enterprise_symbol_name_exist( $args )
 {
     $result = comm_check_parameters( $args, array('symbol_name') );
@@ -249,7 +292,7 @@ function enterprise_add( $args )
         return $result;
 
     // 检查当前管理员是否有权限
-    if( !__have_privilege($_SESSION['user_privilege'], 'enterprise_add') )
+    if( !have_privilege('enterprise_add') )
     {
         $result['err'] = -2;
         $result['err_msg'] = '没有相应权限';
@@ -278,6 +321,8 @@ if( $debug )
     $result = sys_admin_login( array('email' => 'admin@system', 'password' => '') );
     print_r($result);
 
-    echo '是否具有权限 enterprise_add：', __have_privilege( $result['user_privilege'], 'enterprise_add' ), "\n";
+    echo '是否具有权限 enterprise_add：', have_privilege( 'enterprise_add' ), "\n";
+    echo '是否具有资源权限 0, enterprise_add：', have_resource_privilege( 0, 'enterprise_add' ), "\n";
+    
 }
 ?>
