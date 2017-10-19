@@ -14,7 +14,14 @@ $allowed_funtion = array(
     'sys_admin_login',
     'enterprise_admin_login',
     'user_login',
+    'have_privilege',
+    'have_resource_privilege',
+    'sys_admin_add',
+    'enterprise_admin_add',
+    'user_add',
+    'change_password',
 
+    'enterprise_symbol_name_exist',
     'enterprise_add',
 );
 
@@ -175,6 +182,22 @@ function __have_resource_privilege( $user_privilege, $id_resource, $privilege_na
     return false;
 }
 
+function __check_parameters_and_privilege( $args, $mast_exist_parameters, $privilege_name )
+{
+    $result = comm_check_parameters( $args, $mast_exist_parameters );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 检查当前管理员是否有权限
+    if( !have_privilege( $privilege_name ) )
+    {
+        $result['err'] = -2;
+        $result['err_msg'] = '没有相应权限';
+    }
+    
+    return $result;
+}
+
 ///////////////////////////////////////////////////////////////////////
 // 接口函数实现
 ///////////////////////////////////////////////////////////////////////
@@ -271,6 +294,48 @@ function have_resource_privilege( $id_resource, $privilege_name )
     return __have_resource_privilege($_SESSION['user_privilege'], $id_resource, $privilege_name);
 }
 
+function sys_admin_add( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('name', 'email', 'mobile', 'password'), 'sys_admin_add' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $admin_info = db_get_user_info( 'sys_admin', 'id_admin', 0, '', $args['email'] );
+    if( 0 < int($admin_info['id_admin']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'email 已存在，请换一个';
+        return $result;
+    }
+
+    // 计算 password
+    $args['salt'] = '';
+    $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
+
+    // 加入数据库
+    $result['id_admin'] = db_insert_data_ex( 'sys_admin', $args, 'id_admin' );
+    
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'sys_admin_add', $result['id_admin'], 100, '添加系统管理员：' . $args['email'] );
+
+    return $result;
+}
+
+function enterprise_admin_add( $args )
+{
+
+}
+
+function user_add( $args )
+{
+
+}
+
+
+
+
+
+
 function enterprise_symbol_name_exist( $args )
 {
     $result = comm_check_parameters( $args, array('symbol_name') );
@@ -287,17 +352,9 @@ function enterprise_symbol_name_exist( $args )
 
 function enterprise_add( $args )
 {
-    $result = comm_check_parameters( $args, array('symbol_name', 'real_name') );
+    $result = __check_parameters_and_privilege( $args, array('symbol_name', 'real_name'), 'enterprise_add' );
     if( 0 != $result['err'] )
         return $result;
-
-    // 检查当前管理员是否有权限
-    if( !have_privilege('enterprise_add') )
-    {
-        $result['err'] = -2;
-        $result['err_msg'] = '没有相应权限';
-        return $result;
-    }
 
     $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
     if( 0 < int($enterprise_info['id_enterprise']) )
@@ -307,15 +364,19 @@ function enterprise_add( $args )
         return $result;
     }
 
-    $result['id_enterprise'] = db_enterprise_add( $args );
+    $result['id_enterprise'] = db_insert_data_ex( 'enterprise', $args, 'id_enterprise' );
 
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'add', $result['id_enterprise'], 100, '添加企业：' . $args['symbol_name'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_add', $result['id_enterprise'], 200, '添加企业：' . $args['symbol_name'] );
 
     return $result;
 }
 
 
+
+///////////////////////////////////////////////////////////////////////
+// test code
+///////////////////////////////////////////////////////////////////////
 if( $debug )
 {
     $result = sys_admin_login( array('email' => 'admin@system', 'password' => '') );

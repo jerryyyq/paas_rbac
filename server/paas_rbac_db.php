@@ -133,15 +133,6 @@ function db_expand_all_privilege( $privilege )
     return db_select_data($sql);
 }
 
-
-function db_enterprise_add( $args )
-{
-    return db_insert_data( 'enterprise', 
-        array('symbol_name', 'real_name', 'country', 'province', 'address', 'zipcode', 'description'),
-        array($args['symbol_name'], $args['real_name'], $args['country'], $args['province'],
-        $args['address'], $args['zipcode'], $args['description']) );
-}
-
 function db_add_admin_operation_log( $id_admin, $id_enterprise, $action, $target_id, $target_type, $description )
 {
     return db_insert_data( 'admin_operation_log', 
