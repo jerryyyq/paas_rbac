@@ -15,12 +15,23 @@ $allowed_funtion = array(
     'sys_admin_login',
     'enterprise_admin_login',
     'user_login',
+    'change_password',
     'have_privilege',
     'have_resource_privilege',
+
+    'add_privilege',
+    'delete_privilege',
+    'add_rule',
+    'delete_rule',
+    'add_rule_privilege',
+    'delete_rule_privilege',
+    'add_sys_admin_rule',
+    'add_enterprise_admin_rule',
+    'add_user_rule',
+
     'sys_admin_add',
     'enterprise_admin_add',
     'user_add',
-    'change_password',
 
     'enterprise_symbol_name_exist',
     'enterprise_add',
@@ -55,15 +66,15 @@ function session_set_user_info( $user_info )
     setcookie('id_user', $_SESSION['id_user'], time() + COOKIE_OVER_TIME);
 }
 
-function &session_get_user_info( $iduser = 0 )
+function &session_get_user_info( $id_user = 0 )
 {
-    if( 0 < intval($iduser) && intval($_SESSION['id_user']) != intval($iduser) )
+    if( 0 < intval($id_user) and intval($_SESSION['id_user']) != intval($id_user) )
         return array('id_user' => 0);
 
     return $_SESSION['user_info'];
 }
 
-function session_get_user_id( $type = 2 )
+function session_get_user_id( )
 {
     return isset($_SESSION['id_user']) ? intval($_SESSION['id_user']) : 0;
 }
@@ -85,6 +96,8 @@ function __do_login( $table_name, $primary_key_name, $email, $password )
         }
 
         // 存入 session
+        $user_info['table_name'] = $table_name;
+        $user_info['primary_key_name'] = $primary_key_name;
         $user_info['type'] = 2;
         if( 'sys_admin' === $table_name )
             $user_info['type'] = 0;
@@ -102,12 +115,12 @@ function __do_login( $table_name, $primary_key_name, $email, $password )
     }
     else if( -1 === $id_user )
     {
-        $result['err'] = -1;
+        $result['err'] = -2;
         $result['err_msg'] = '密码错误';
     }
     else if( -2 === $id_user )
     {
-        $result['err'] = -1;
+        $result['err'] = -3;
         $result['err_msg'] = '帐号未激活,请到邮箱激活';
     }
 
@@ -248,6 +261,41 @@ function user_login( $args )
     return $result;
 }
 
+function change_password( $args )
+{
+    $result = comm_check_parameters( $args, array('old_password', 'new_password') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    if( 1 > session_get_user_id() )
+    {
+        $result['err'] = -4;
+        $result['err_msg'] = '请先登录';
+        return $result;
+    }
+
+    $user_info = session_get_user_info();
+    $id_user = db_check_user_password( $user_info['table_name'], $user_info['primary_key_name'], $user_info['email'], $args['old_password'] );
+    if( 0 < $id_user )
+    {
+        $result['err'] = -2;
+        $result['err_msg'] = '密码错误';
+        return $result;
+    }
+    
+    $salt = '';
+    $password = comm_get_password_hash( $args['new_password'], $salt );
+
+    if( !db_set_user_password($user_info['table_name'], $user_info['primary_key_name'], $id_user, $salt, $password) )
+    {
+        $result['err'] = -10;
+        $result['err_msg'] = '操作失败';
+
+    }
+    
+    return $result;    
+}
+
 // 检查当前用户是否有某个权限
 function have_privilege( $privilege_name )
 {
@@ -366,10 +414,6 @@ function user_add( $args )
     return $result;
 }
 
-function change_password( $args )
-{
-
-}
 
 function enterprise_symbol_name_exist( $args )
 {

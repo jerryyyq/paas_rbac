@@ -55,7 +55,7 @@ CREATE TABLE `ac_privilege` (
   `name` varchar(128) DEFAULT NULL,
   `show_name` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id_privilege`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -64,7 +64,7 @@ CREATE TABLE `ac_privilege` (
 
 LOCK TABLES `ac_privilege` WRITE;
 /*!40000 ALTER TABLE `ac_privilege` DISABLE KEYS */;
-INSERT INTO `ac_privilege` VALUES (1,0,'sys_admin_manage','管理系统管理员'),(2,1,'sys_admin_add','添加系统管理员'),(3,1,'sys_admin_delete','删除系统管理员'),(4,1,'sys_admin_modify','修改系统管理员信息'),(5,1,'sys_admin_read','查看系统管理员信息'),(6,0,'sys_log_read','查看系统日志'),(7,0,'enterprise_manage','管理企业'),(8,7,'enterprise_add','添加企业'),(9,7,'enterprise_delete','删除企业'),(10,7,'enterprise_modify','修改企业信息'),(11,7,'enterprise_read','查看企业信息'),(12,0,'enterprise_admin_manage','管理企业管理员'),(13,12,'enterprise_admin_add','添加企业管理员'),(14,12,'enterprise_admin_delete','删除企业管理员'),(15,12,'enterprise_admin_modify','修改企业管理员信息'),(16,12,'enterprise_admin_read','查看企业管理员信息'),(17,0,'web_manage','管理站点'),(18,17,'web_add','添加站点'),(19,17,'web_delete','删除站点'),(20,17,'web_modify','修改站点信息'),(21,17,'web_read','查看站点信息'),(22,0,'user_manage','用户管理'),(23,22,'user_add','添加用户'),(24,22,'user_delete','删除用户'),(25,22,'user_modify','修改用户信息'),(26,22,'user_read','查看用户信息'),(27,0,'channel_manage','渠道管理'),(28,27,'channel_add','添加渠道'),(29,27,'channel_delete','删除渠道'),(30,27,'channel_modify','修改渠道信息'),(31,27,'channel_read','查看渠道信息');
+INSERT INTO `ac_privilege` VALUES (1,0,'privilege_manage','系统权限、角色管理'),(2,0,'sys_admin_manage','管理系统管理员'),(3,2,'sys_admin_add','添加系统管理员'),(4,2,'sys_admin_delete','删除系统管理员'),(5,2,'sys_admin_modify','修改系统管理员信息'),(6,2,'sys_admin_read','查看系统管理员信息'),(7,2,'sys_admin_rule','管理系统管理员角色'),(8,0,'sys_log_read','查看系统日志'),(9,0,'enterprise_manage','管理企业'),(10,9,'enterprise_add','添加企业'),(11,9,'enterprise_delete','删除企业'),(12,9,'enterprise_modify','修改企业信息'),(13,9,'enterprise_read','查看企业信息'),(14,0,'enterprise_admin_manage','管理企业管理员'),(15,14,'enterprise_admin_add','添加企业管理员'),(16,14,'enterprise_admin_delete','删除企业管理员'),(17,14,'enterprise_admin_modify','修改企业管理员信息'),(18,14,'enterprise_admin_read','查看企业管理员信息'),(19,14,'enterprise_admin_rule','管理企业管理员角色'),(20,0,'web_manage','管理站点'),(21,20,'web_add','添加站点'),(22,20,'web_delete','删除站点'),(23,20,'web_modify','修改站点信息'),(24,20,'web_read','查看站点信息'),(25,0,'user_manage','用户管理'),(26,25,'user_add','添加用户'),(27,25,'user_delete','删除用户'),(28,25,'user_modify','修改用户信息'),(29,25,'user_read','查看用户信息'),(30,25,'user_rule','管理用户角色'),(31,0,'channel_manage','渠道管理'),(32,31,'channel_add','添加渠道'),(33,31,'channel_delete','删除渠道'),(34,31,'channel_modify','修改渠道信息'),(35,31,'channel_read','查看渠道信息');
 /*!40000 ALTER TABLE `ac_privilege` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -135,7 +135,7 @@ CREATE TABLE `ac_rule_resource_privilege` (
   `id_privilege` int(11) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -144,7 +144,7 @@ CREATE TABLE `ac_rule_resource_privilege` (
 
 LOCK TABLES `ac_rule_resource_privilege` WRITE;
 /*!40000 ALTER TABLE `ac_rule_resource_privilege` DISABLE KEYS */;
-INSERT INTO `ac_rule_resource_privilege` VALUES (1,1,0,1,'all 角色拥有 sys_admin_manage 权限'),(2,1,0,6,'all 角色拥有 sys_log_read 权限'),(3,1,0,7,'all 角色拥有 enterprise_manage 权限'),(4,1,0,12,'all 角色拥有 enterprise_admin_manage 权限'),(5,1,0,17,'all 角色拥有 web_manage 权限'),(6,1,0,22,'all 角色拥有 user_manage 权限'),(7,1,0,27,'all 角色拥有 channel_manage 权限');
+INSERT INTO `ac_rule_resource_privilege` VALUES (1,1,0,1,'all 角色拥有 privilege_manage 权限'),(2,1,0,2,'all 角色拥有 sys_admin_manage 权限'),(3,1,0,8,'all 角色拥有 sys_log_read 权限'),(4,1,0,9,'all 角色拥有 enterprise_manage 权限'),(5,1,0,14,'all 角色拥有 enterprise_admin_manage 权限'),(6,1,0,20,'all 角色拥有 web_manage 权限'),(7,1,0,25,'all 角色拥有 user_manage 权限'),(8,1,0,31,'all 角色拥有 channel_manage 权限');
 /*!40000 ALTER TABLE `ac_rule_resource_privilege` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -436,4 +436,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-10-15 19:20:55
+-- Dump completed on 2017-10-23  0:36:25

@@ -59,15 +59,15 @@ function db_check_user_password( $table_name, $primary_key_name, $email, $passwo
     return (int)$user[$primary_key_name]; 
 }
 
-function db_get_user_all_info( $table_name, $primary_key_name, $iduser, $wx_unionid = '', $email = '' )
+function db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_unionid = '', $email = '' )
 {
     $sql = "SELECT * FROM {$table_name} WHERE ";
 
     $bind_param = array();
-    if( 0 < intval($iduser) )
+    if( 0 < intval($id_user) )
     {
         $sql = $sql . $primary_key_name . ' = ?';
-        $bind_param[0] = $iduser;
+        $bind_param[0] = $id_user;
     }
     else if( 0 < strlen($wx_unionid) )
     {
@@ -87,13 +87,19 @@ function db_get_user_all_info( $table_name, $primary_key_name, $iduser, $wx_unio
     return $rows[0];
 }
 
-function db_get_user_info( $table_name, $primary_key_name, $iduser, $wx_unionid = '', $email = '' )
+function db_get_user_info( $table_name, $primary_key_name, $id_user, $wx_unionid = '', $email = '' )
 {
-    $user_info = db_get_user_all_info( $table_name, $primary_key_name, $iduser, $wx_unionid, $email);
+    $user_info = db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_unionid, $email);
     unset( $user_info['salt'] );
     unset( $user_info['password'] );
 
     return $user_info;
+}
+
+function db_set_user_password( $table_name, $primary_key_name, $id_user, $salt, $password )
+{
+    return db_update_data( $table_name, array('salt', 'password'), 
+        $primary_key_name . '= ?', array($salt, $password, $id_user) );
 }
 
 function db_get_enterprise_info( $symbol_name, $id_enterprise = 0 )
