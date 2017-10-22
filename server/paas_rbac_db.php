@@ -1,5 +1,35 @@
 <?php
-require_once('./common.php');
+require_once('./yyq_frame.php');
+
+define( 'CREATE_USER_TABLE', "CREATE TABLE `user_%s` (
+    `id_user` int(11) NOT NULL AUTO_INCREMENT,
+    `name` varchar(45) DEFAULT NULL,
+    `email` varchar(45) DEFAULT NULL,
+    `mobile` varchar(45) DEFAULT NULL,
+    `salt` varchar(128) DEFAULT NULL,
+    `password` varchar(512) DEFAULT NULL,
+    `real_name` varchar(128) DEFAULT NULL,
+    `state` int(11) DEFAULT '0',
+    `id_channel` int(11) DEFAULT '0' COMMENT '是从哪个渠道加过来的。0 为非渠道用户。',
+    `oauth_platform_type` varchar(128) DEFAULT NULL COMMENT '第三方登录平台类型。‘’ 和 ‘0’ 表示没有第三方登录平台关联帐号；‘1’ 是微信 unionid；‘2’是微信 openid；''3''是 QQ；‘4’是新浪；',
+    `wx_unionid` varchar(128) DEFAULT NULL,
+    `wx_openid` varchar(128) DEFAULT NULL,
+    `qq_openid` varchar(128) DEFAULT NULL,
+    `sina_openid` varchar(128) DEFAULT NULL,
+    `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
+    `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
+    `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id_user`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;" );
+
+define( 'CREATE_USER_RULE_TABLE', "CREATE TABLE `ac_user_rule_%s` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `id_user` int(11) DEFAULT NULL,
+    `id_rule` int(11) DEFAULT NULL,
+    `description` varchar(256) DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;" );
+
 
 // 返回值：0 == 用户不存在；大于 0 == 用户 id；-1 == 口令错误；-2 == 帐号未激活
 function db_check_user_password( $table_name, $primary_key_name, $email, $password )
@@ -140,6 +170,13 @@ function db_add_admin_operation_log( $id_admin, $id_enterprise, $action, $target
         array($id_admin, $id_enterprise, $action, $target_id, $target_type, $description) );
 }
 
+function db_create_website_user_tables( $id_website )
+{
+    $sql_array = array();
+    $sql_array[] = sprintf( CREATE_USER_TABLE, $id_website );
+    $sql_array[] = sprintf( CREATE_USER_RULE_TABLE, $id_website );
 
+    return db_do_transaction( $sql_array );
+}
 
 ?>

@@ -3,11 +3,12 @@
 // 命令行调试： $ php paas_rbac.php debug
 // php 命令行交互测试：$ php -a
 
-
-require_once('./common.php');
+require_once('./yyq_frame.php');
+require_once('./yyq_frame_config.php');
 require_once('./paas_rbac_db.php');
 
-define('COOKIE_OVER_TIME', 86400);         // session 与 cookie 过期时间：1 天过期
+define( 'COOKIE_OVER_TIME', 86400 );         // session 与 cookie 过期时间：1 天过期
+
 
 $allowed_funtion = array(
     'test',
@@ -23,7 +24,11 @@ $allowed_funtion = array(
 
     'enterprise_symbol_name_exist',
     'enterprise_add',
+    'website_symbol_name_exist',
+    'website_add'
 );
+
+
 
 //////////////////////// 开始主功能 ///////////////////////////
 ini_set('session.gc_maxlifetime', COOKIE_OVER_TIME);
@@ -31,50 +36,15 @@ session_start();
 if( isset($_COOKIE['PHPSESSID']) )
     setcookie( 'PHPSESSID', session_id(), time() + COOKIE_OVER_TIME );
 
-$debug = in_array('debug', $argv);
+if( isset($argv) )
+    $g_debug = in_array('debug', $argv);
 
-if( !$debug )
+if( !$g_debug )
 {
-    main();
+    yyq_frame_main( $allowed_funtion );
     exit( 0 );
 }
 
-// 主函数
-function main()
-{
-    global $allowed_funtion;
-    if( 0 == comm_make_xcros() )
-        return true;
-
-    $result = array( 'err' => 0, 'err_msg' => '', 'data' => array() );
-
-    $api_name = $_GET['m'];
-    while(true)
-    {
-        if( !$api_name || !in_array($api_name, $allowed_funtion) || !function_exists($api_name) )
-        {
-            $result['err'] = -10001;
-            $result['err_msg'] = 'api_name wrong';
-            break;
-        }
-
-        $params = comm_get_parameters( );
-        
-        try
-        { 
-            $result = call_user_func( $api_name, $params );
-        }
-        catch( xception $e )
-        {
-            $result['err'] = -10002;
-            $result['err_msg'] = $e->getMessage();
-        }
-
-        break;
-    }
-
-    echo json_encode($result, JSON_UNESCAPED_UNICODE);
-}
 
 //////////////////////// session 代码 ///////////////////////////
 function session_set_user_info( $user_info )
@@ -203,7 +173,7 @@ function __check_parameters_and_privilege( $args, $mast_exist_parameters, $privi
 ///////////////////////////////////////////////////////////////////////
 function test( $args )
 {
-    $result = array( 'err' => 0, 'err_msg' => '', 'data' => 'Hello Pass_rbac!' );
+    $result = array( 'err' => 0, 'err_msg' => '', 'data' => 'Hello Pass_rbac! you call test.' );
     $result['args'] = $args;
     return $result;
 }
@@ -313,6 +283,9 @@ function sys_admin_add( $args )
     $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
 
     // 加入数据库
+    $args['state'] = 0;
+    $args['wx_unionid'] = '';
+    $args['wx_openid'] = '';
     $result['id_admin'] = db_insert_data_ex( 'sys_admin', $args, 'id_admin' );
     
     // 添加操作日志
@@ -323,18 +296,80 @@ function sys_admin_add( $args )
 
 function enterprise_admin_add( $args )
 {
+    $result = __check_parameters_and_privilege( $args, array('id_enterprise', 'name', 'email', 'mobile', 'password'), 'enterprise_admin_add' );
+    if( 0 != $result['err'] )
+        return $result;
 
+    $admin_info = db_get_user_info( 'enterprise_admin', 'id_admin', 0, '', $args['email'] );
+    if( 0 < int($admin_info['id_admin']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'email 已存在，请换一个';
+        return $result;
+    }
+
+    // 计算 password
+    $args['salt'] = '';
+    $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
+
+    // 加入数据库
+    $args['state'] = 0;
+    $args['wx_unionid'] = '';
+    $args['wx_openid'] = '';
+    $result['id_admin'] = db_insert_data_ex( 'enterprise_admin', $args, 'id_admin' );
+    
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_add', $result['id_admin'], 101, '添加企业管理员：' . $args['email'] );
+
+    return $result;
 }
 
 function user_add( $args )
 {
+    $result = comm_check_parameters( $args, array('id_website', 'name', 'email', 'mobile', 'password'), 'user_add' );
+    if( 0 != $result['err'] )
+        return $result;
 
+    $website_info = db_get_website_info( '', $arg['id_website'] );
+
+    // 检查当前管理员是否有权限
+    if( !have_resource_privilege( $website_info['id_enterprise'], 'user_add' ) )
+    {
+        $result['err'] = -2;
+        $result['err_msg'] = '没有相应权限';
+        return $result;
+    }
+
+    // 获得用户表名
+    $table_name = 'user_' . $arg['id_website'];
+    $user_info = db_get_user_info( $table_name, 'id_user', 0, '', $args['email'] );
+    if( 0 < int($user_info['id_user']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'email 已存在，请换一个';
+        return $result;
+    }
+
+    // 计算 password
+    $args['salt'] = '';
+    $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
+
+    // 加入数据库
+    $args['state'] = 0;
+    $args['wx_unionid'] = '';
+    $args['wx_openid'] = '';
+    $result['id_user'] = db_insert_data_ex( $table_name, $args, 'id_user' );
+    
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'user_add', $result['id_admin'], 101, '添加企业管理员：' . $args['email'] );
+
+    return $result;
 }
 
+function change_password( $args )
+{
 
-
-
-
+}
 
 function enterprise_symbol_name_exist( $args )
 {
@@ -357,7 +392,7 @@ function enterprise_add( $args )
         return $result;
 
     $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
-    if( 0 < int($enterprise_info['id_enterprise']) )
+    if( 0 < intval($enterprise_info['id_enterprise']) )
     {
         $result['err'] = -102;
         $result['err_msg'] = '符号名已存在，请换一个';
@@ -372,12 +407,58 @@ function enterprise_add( $args )
     return $result;
 }
 
+function website_symbol_name_exist( $args )
+{
+    $result = comm_check_parameters( $args, array('symbol_name') );
+    if( 0 != $result['err'] )
+        return $result;
+    
+    $result['exist'] = 0;
+    $website_info = db_get_website_info( $args['symbol_name'] );
+    if( 0 < intval($website_info['id_website']) )
+        $result['exist'] = 1;
+
+    return $result;
+}
+
+function website_add( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_enterprise', 'name', 'symbol_name'), 'website_add' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $website_info = db_get_website_info( $args['symbol_name'] );
+    if( 0 < intval($website_info['id_website']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = '符号名已存在，请换一个';
+        return $result;
+    }
+
+    $result['id_website'] = db_insert_data_ex( 'website', $args, 'id_website' );
+
+    // 创建站点 user 表和 ac_user_rule 表
+    if( !db_create_website_user_tables( $result['id_website'] ) )
+    {
+        @db_delete_data( 'website', 'id_website', $result['id_website']);
+
+        $result['err'] = -103;
+        $result['err_msg'] = '创建相关表失败';
+        return $result;
+    }
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'website_add', $result['id_website'], 201, '添加站点：' . $args['symbol_name'] );
+
+    return $result;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////
 // test code
 ///////////////////////////////////////////////////////////////////////
-if( $debug )
+if( $g_debug )
 {
     $result = sys_admin_login( array('email' => 'admin@system', 'password' => '') );
     print_r($result);
@@ -385,5 +466,11 @@ if( $debug )
     echo '是否具有权限 enterprise_add：', have_privilege( 'enterprise_add' ), "\n";
     echo '是否具有资源权限 0, enterprise_add：', have_resource_privilege( 0, 'enterprise_add' ), "\n";
     
+    // $result = enterprise_add( array('symbol_name' => 'xxwenhua', 'real_name' => '潇湘文化公司') );
+    // print_r($result);
+
+    $result = website_add( array('id_enterprise' => 1, 'symbol_name' => 'xxfzi', 'name' => '潇湘妃子') );
+    print_r($result);
 }
+
 ?>

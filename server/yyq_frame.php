@@ -34,14 +34,62 @@
 *
 */
 
-include_once('common_log.php');
-include_once('common_memcache.php');
-include_once('common_db.php');
+include_once('yyq_frame_log.php');
+include_once('yyq_frame_memcache.php');
+include_once('yyq_frame_db.php');
 
 date_default_timezone_set('Asia/Shanghai');
 
 define('PBKDF2_ITERATIONS', 1000);
 define('PBKDF2_LENGTH', 512);
+
+$g_debug = false;
+
+// 框架运行主函数
+function yyq_frame_main( $allowed_funtion )
+{
+    if( 0 == comm_make_xcros() )
+        return true;
+
+    $result = array( 'err' => 0, 'err_msg' => '', 'data' => array() );
+    if( !isset($_GET['m']) )
+    {
+        $result['err'] = -10001;
+        $result['err_msg'] = 'parameter wrong';
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        return true;
+    }
+
+    $api_name = $_GET['m'];
+    while(true)
+    {
+        if( !$api_name || !in_array($api_name, $allowed_funtion) || !function_exists($api_name) )
+        {
+            $result['err'] = -10002;
+            $result['err_msg'] = 'api_name wrong';
+            break;
+        }
+
+        $params = comm_get_parameters( );
+        // if( 1 > count($params) )
+        //     log_warn( 'parameter args is empty.' );
+
+        try
+        { 
+            $result = call_user_func( $api_name, $params );
+        }
+        catch( xception $e )
+        {
+            $result['err'] = -10003;
+            $result['err_msg'] = $e->getMessage();
+        }
+
+        break;
+    }
+
+    echo json_encode($result, JSON_UNESCAPED_UNICODE);
+}
+
 
 
 /* ------- 所有的参数都封装到 json 串中，GET 为 args 参数，POST 时直接为 body，也可以为 args 参数 ----------
@@ -60,14 +108,14 @@ function comm_get_parameters( )
         $url_decode_arg = urldecode($raw_arg);
 
         $input = str_replace('\\', '', $url_decode_arg);
-        logNoti( 'input is: ' . $input );
     }
     else
     {
         // 获取 body 中的参数
         $input = @file_get_contents('php://input');
     }
-    
+
+    log_debug( 'input is: ' . $input );
     $params = json_decode($input, true);
     return $params; 
 }

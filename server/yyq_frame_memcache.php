@@ -1,7 +1,7 @@
 <?php
 // by yangyuqi at 2017-07-09
 
-include_once('svr_config.php');
+include_once('yyq_frame_config.php');
 
 $g_memcache = null;
 

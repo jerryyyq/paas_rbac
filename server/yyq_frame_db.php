@@ -4,7 +4,8 @@
 * Date: 2017/08/27
 */
 
-include_once('svr_config.php');
+include_once('yyq_frame_config.php');
+include_once('yyq_frame_log.php');
 
 $pdo = null;
 
@@ -89,6 +90,13 @@ function db_insert_data( $table, $fields, $values )
     return db_get_Connect()->lastInsertId();
 }
 
+function db_delete_data($table, $delete_field_name, $delete_field_value)
+{
+    $sql = "DELETE FROM {$table} WHERE {$delete_field_name} = ?";
+    $stmt = NULL;
+    return db_execute_sql($stmt, $sql, array($delete_field_value) );
+}
+
 function db_update_data_ex( $table, $row, $primary_key_name )
 {
     $where = $primary_key_name . ' = ?';
@@ -123,4 +131,29 @@ function db_insert_data_ex( $table, &$row, $primary_key_name )
 
     $row[$primary_key_name] = db_insert_data( $table, $fields, $values );
     return $row[$primary_key_name];
+}
+
+
+function db_do_transaction( $sql_array )
+{
+    try
+    {
+        $conn = db_get_Connect();
+        $conn->beginTransaction();
+
+        foreach( $sql_array as $sql )
+        {
+            $affected_rows = $conn->exec( $sql );
+            if(!$affected_rows)
+                throw new PDOException('执行：'. $sql . ' 失败。');
+        }
+
+        return $conn->commit();
+    }
+    catch(PDOException $ex)
+    {
+        $conn->rollBack();
+        log_error( 'db_do_transaction except: ' . $ex->getMessage() );
+        return false;
+    }     
 }

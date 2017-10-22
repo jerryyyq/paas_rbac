@@ -1,11 +1,11 @@
 <?php
-define('SERVER_DOMAIN_URL', 'https://w.xxguan.cn/');
+define('SERVER_DOMAIN_URL', 'https://www.pass_rbac.com/');
+define('LOG_LEVEL', 0);         // 0 debug; 1 info; 2 warn; 3 error; 4 fatal
 
 define('DB_HOST', '127.0.0.1');
 define('DB_USER', 'root');
 define('DB_PASS', 'yyqet');
 define('DB_NAME', 'paas_rbac');
-
 
 define('MEMCACHE_IP', '127.0.0.1');
 define('MEMCACHE_PORT', 11211);
@@ -39,8 +39,8 @@ function get_wx_appid( $httphost, $baseauth )
     }
     elseif( $httphost == 'w.safenext.cn' )
     {
-          $appid = 'wxad3bc3201c591106';
-          $secret = 'cf19fcea115ef40f77f311a930812189';
+        $appid = 'wxad3bc3201c591106';
+        $secret = 'cf19fcea115ef40f77f311a930812189';
     }
 
     return array( 'appid' => $appid, 'secret' => $secret );
