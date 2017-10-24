@@ -102,6 +102,28 @@ function db_set_user_password( $table_name, $primary_key_name, $id_user, $salt, 
         $primary_key_name . '= ?', array($salt, $password, $id_user) );
 }
 
+function db_get_privilege_info( $name, $id_privilege = 0 )
+{
+    $sql = "SELECT * FROM ac_privilege WHERE name = ? LIMIT 1";
+    $bind_param = array( $name );
+    if( 1 > strlen($name) )
+    {
+        $sql = "SELECT * FROM ac_privilege WHERE id_privilege = ? LIMIT 1";
+        $bind_param = array( $id_privilege );
+    }
+
+    $rows = db_select_data($sql, $bind_param);
+    if( !isset($rows[0]) )
+        return array( 'id_privilege' => 0 );
+
+    return $rows[0];
+}
+
+
+
+
+
+
 function db_get_enterprise_info( $symbol_name, $id_enterprise = 0 )
 {
     $sql = "SELECT * FROM enterprise WHERE symbol_name = ? LIMIT 1";

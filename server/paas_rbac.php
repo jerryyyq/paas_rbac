@@ -19,15 +19,20 @@ $allowed_funtion = array(
     'have_privilege',
     'have_resource_privilege',
 
-    'add_privilege',
-    'delete_privilege',
-    'add_rule',
-    'delete_rule',
-    'add_rule_privilege',
-    'delete_rule_privilege',
-    'add_sys_admin_rule',
-    'add_enterprise_admin_rule',
-    'add_user_rule',
+    'privilege_info_get',
+    'privilege_add',
+    'privilege_delete',
+    'rule_info_get',
+    'rule_add',
+    'rule_delete',
+    'rule_privilege_add',
+    'rule_privilege_delete',
+    'sys_admin_rule_add',
+    'sys_admin_rule_delete',
+    'enterprise_admin_rule_add',
+    'enterprise_admin_rule_delete',
+    'user_rule_add',
+    'user_rule_delete',
 
     'sys_admin_add',
     'enterprise_admin_add',
@@ -137,6 +142,15 @@ function __have_privilege( $user_privilege, $privilege_name )
 
     return -1;
 }
+// 检查当前用户是否有某个权限
+function __have_privilege_ex( $privilege_name )
+{
+    $key = __have_privilege($_SESSION['user_privilege'], $privilege_name);
+    if( 0 > $key )
+        return false;
+    else
+        return true;
+}
 
 function __have_resource_privilege( $user_privilege, $id_resource, $privilege_name )
 {
@@ -165,6 +179,12 @@ function __have_resource_privilege( $user_privilege, $id_resource, $privilege_na
     return false;
 }
 
+// 检查当前用户是否有某个资源的权限
+function __have_resource_privilege_ex( $id_resource, $privilege_name )
+{
+    return __have_resource_privilege($_SESSION['user_privilege'], $id_resource, $privilege_name);
+}
+
 function __check_parameters_and_privilege( $args, $mast_exist_parameters, $privilege_name )
 {
     $result = comm_check_parameters( $args, $mast_exist_parameters );
@@ -172,7 +192,7 @@ function __check_parameters_and_privilege( $args, $mast_exist_parameters, $privi
         return $result;
 
     // 检查当前管理员是否有权限
-    if( !have_privilege( $privilege_name ) )
+    if( !__have_privilege_ex( $privilege_name ) )
     {
         $result['err'] = -2;
         $result['err_msg'] = '没有相应权限';
@@ -297,20 +317,118 @@ function change_password( $args )
 }
 
 // 检查当前用户是否有某个权限
-function have_privilege( $privilege_name )
+function have_privilege( $args )
 {
-    $key = __have_privilege($_SESSION['user_privilege'], $privilege_name);
-    if( 0 > $key )
-        return false;
-    else
-        return true;
+    $result = comm_check_parameters( $args, array('privilege_name') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['have'] = __have_privilege_ex( $args['privilege_name'] );
+    return $result;
 }
 
 // 检查当前用户是否有某个资源的权限
-function have_resource_privilege( $id_resource, $privilege_name )
+function have_resource_privilege( $args )
 {
-    return __have_resource_privilege($_SESSION['user_privilege'], $id_resource, $privilege_name);
+    $result = comm_check_parameters( $args, array('id_resource', 'privilege_name') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['have'] = __have_resource_privilege_ex($args['id_resource'], $args['privilege_name']);
+    return $result;
 }
+
+function privilege_info_get( $args )
+{
+    $result = comm_check_parameters( $args, array('name') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['privilege_info'] = db_get_privilege_info( $args['name'] );
+    return $result;
+}
+
+function privilege_add( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_father', 'name', 'show_name'), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $privilege_info = db_get_privilege_info( $args['name'] );
+    if( 0 < int($privilege_info['id_privilege']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'name 已存在，请换一个';
+        return $result;
+    }
+
+    $result['id_privilege'] = db_insert_data_ex( 'ac_privilege', $args, 'id_privilege' );
+    
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'privilege_add', $result['id_privilege'], 100, '添加权限：' . $args['name'] );
+
+    return $result;
+}
+
+function privilege_delete( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('name'), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $privilege_info = db_get_privilege_info( $args['name'] );
+    if( 0 < int($privilege_info['id_privilege']) )
+        return $result;
+
+    if( !@db_delete_data( 'ac_privilege', 'id_privilege=？ OR id_father=?', 
+        array($privilege_info['id_privilege'], $privilege_info['id_privilege']) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'privilege_delete', $privilege_info['id_privilege'], 101, '删除权限：' . $args['name'] );
+
+    return $result;
+}
+
+function add_rule( $args )
+{
+
+}
+
+function delete_rule( $args )
+{
+    
+}
+
+function add_rule_privilege( $args )
+{
+
+}
+
+function delete_rule_privilege( $args )
+{
+
+}
+
+function add_sys_admin_rule( $args )
+{
+
+}
+
+function add_enterprise_admin_rule( $args )
+{
+
+}
+
+function add_user_rule( $args )
+{
+
+}
+
 
 function sys_admin_add( $args )
 {
@@ -337,7 +455,7 @@ function sys_admin_add( $args )
     $result['id_admin'] = db_insert_data_ex( 'sys_admin', $args, 'id_admin' );
     
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'sys_admin_add', $result['id_admin'], 100, '添加系统管理员：' . $args['email'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'sys_admin_add', $result['id_admin'], 200, '添加系统管理员：' . $args['email'] );
 
     return $result;
 }
@@ -367,7 +485,7 @@ function enterprise_admin_add( $args )
     $result['id_admin'] = db_insert_data_ex( 'enterprise_admin', $args, 'id_admin' );
     
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_add', $result['id_admin'], 101, '添加企业管理员：' . $args['email'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_add', $result['id_admin'], 201, '添加企业管理员：' . $args['email'] );
 
     return $result;
 }
@@ -381,7 +499,7 @@ function user_add( $args )
     $website_info = db_get_website_info( '', $arg['id_website'] );
 
     // 检查当前管理员是否有权限
-    if( !have_resource_privilege( $website_info['id_enterprise'], 'user_add' ) )
+    if( !__have_resource_privilege_ex( $website_info['id_enterprise'], 'user_add' ) )
     {
         $result['err'] = -2;
         $result['err_msg'] = '没有相应权限';
@@ -409,7 +527,7 @@ function user_add( $args )
     $result['id_user'] = db_insert_data_ex( $table_name, $args, 'id_user' );
     
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'user_add', $result['id_admin'], 101, '添加企业管理员：' . $args['email'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'user_add', $result['id_admin'], 201, '添加用户：' . $args['email'] );
 
     return $result;
 }
@@ -446,7 +564,7 @@ function enterprise_add( $args )
     $result['id_enterprise'] = db_insert_data_ex( 'enterprise', $args, 'id_enterprise' );
 
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_add', $result['id_enterprise'], 200, '添加企业：' . $args['symbol_name'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_add', $result['id_enterprise'], 300, '添加企业：' . $args['symbol_name'] );
 
     return $result;
 }
@@ -484,7 +602,7 @@ function website_add( $args )
     // 创建站点 user 表和 ac_user_rule 表
     if( !db_create_website_user_tables( $result['id_website'] ) )
     {
-        @db_delete_data( 'website', 'id_website', $result['id_website']);
+        @db_delete_data( 'website', 'id_website=？', array($result['id_website']) );
 
         $result['err'] = -103;
         $result['err_msg'] = '创建相关表失败';
@@ -492,7 +610,7 @@ function website_add( $args )
     }
 
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'website_add', $result['id_website'], 201, '添加站点：' . $args['symbol_name'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'website_add', $result['id_website'], 301, '添加站点：' . $args['symbol_name'] );
 
     return $result;
 }
@@ -507,8 +625,8 @@ if( $g_debug )
     $result = sys_admin_login( array('email' => 'admin@system', 'password' => '') );
     print_r($result);
 
-    echo '是否具有权限 enterprise_add：', have_privilege( 'enterprise_add' ), "\n";
-    echo '是否具有资源权限 0, enterprise_add：', have_resource_privilege( 0, 'enterprise_add' ), "\n";
+    echo '是否具有权限 enterprise_add：', __have_privilege_ex( 'enterprise_add' ), "\n";
+    echo '是否具有资源权限 0, enterprise_add：', __have_resource_privilege_ex( 0, 'enterprise_add' ), "\n";
     
     // $result = enterprise_add( array('symbol_name' => 'xxwenhua', 'real_name' => '潇湘文化公司') );
     // print_r($result);

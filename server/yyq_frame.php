@@ -43,7 +43,6 @@ date_default_timezone_set('Asia/Shanghai');
 define('PBKDF2_ITERATIONS', 1000);
 define('PBKDF2_LENGTH', 512);
 
-$g_debug = false;
 
 // 框架运行主函数
 function yyq_frame_main( $allowed_funtion )

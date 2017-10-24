@@ -90,11 +90,11 @@ function db_insert_data( $table, $fields, $values )
     return db_get_Connect()->lastInsertId();
 }
 
-function db_delete_data($table, $delete_field_name, $delete_field_value)
+function db_delete_data($table, $where, $values)
 {
-    $sql = "DELETE FROM {$table} WHERE {$delete_field_name} = ?";
+    $sql = "DELETE FROM {$table} WHERE {$where}";
     $stmt = NULL;
-    return db_execute_sql($stmt, $sql, array($delete_field_value) );
+    return db_execute_sql($stmt, $sql, $values );
 }
 
 function db_update_data_ex( $table, $row, $primary_key_name )
