@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `paas_rbac` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `paas_rbac`;
--- MySQL dump 10.13  Distrib 5.7.19, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.20, for Linux (x86_64)
 --
 -- Host: localhost    Database: paas_rbac
 -- ------------------------------------------------------
--- Server version	5.7.19-0ubuntu0.17.04.1
+-- Server version	5.7.20-0ubuntu0.17.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -134,7 +134,8 @@ CREATE TABLE `ac_rule_resource_privilege` (
   `id_resource` int(11) DEFAULT NULL,
   `id_privilege` int(11) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `index2` (`id_rule`,`id_resource`,`id_privilege`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -246,7 +247,8 @@ CREATE TABLE `enterprise` (
   `description` varchar(256) DEFAULT NULL,
   `state` int(11) DEFAULT '0',
   `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_enterprise`)
+  PRIMARY KEY (`id_enterprise`),
+  UNIQUE KEY `symbol_name_UNIQUE` (`symbol_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -344,7 +346,8 @@ CREATE TABLE `third_party_channel` (
   `sharing_ratio` float DEFAULT NULL COMMENT '收入分成比例',
   `state` int(11) DEFAULT '0',
   `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_channel`)
+  PRIMARY KEY (`id_channel`),
+  UNIQUE KEY `Identification_code_UNIQUE` (`Identification_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -407,12 +410,13 @@ CREATE TABLE `website` (
   `id_enterprise` int(11) NOT NULL COMMENT '属于哪个企业的',
   `name` varchar(512) DEFAULT NULL,
   `url` varchar(128) NOT NULL,
-  `symbol_name` varchar(128) DEFAULT NULL COMMENT 'url 中 子域名',
+  `symbol_name` varchar(128) NOT NULL COMMENT 'url 中 子域名',
   `style` int(11) NOT NULL DEFAULT '0' COMMENT '网站风格（皮肤和式样）',
   `description` varchar(256) DEFAULT NULL,
   `state` int(11) DEFAULT NULL,
   `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_website`),
+  UNIQUE KEY `symbol_name_UNIQUE` (`symbol_name`),
   KEY `fk_website_1_idx` (`id_enterprise`),
   CONSTRAINT `fk_website_1` FOREIGN KEY (`id_enterprise`) REFERENCES `enterprise` (`id_enterprise`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -436,4 +440,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-10-23  0:36:25
+-- Dump completed on 2017-10-26 23:28:03

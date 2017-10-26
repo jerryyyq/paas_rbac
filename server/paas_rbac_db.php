@@ -102,24 +102,30 @@ function db_set_user_password( $table_name, $primary_key_name, $id_user, $salt, 
         $primary_key_name . '= ?', array($salt, $password, $id_user) );
 }
 
-function db_get_privilege_info( $name, $id_privilege = 0 )
+function db_get_some_table_info( $table_name, $field_name, $field_value, $primary_key_name, $primary_key_value = 0 )
 {
-    $sql = "SELECT * FROM ac_privilege WHERE name = ? LIMIT 1";
-    $bind_param = array( $name );
-    if( 1 > strlen($name) )
+    $sql = "SELECT * FROM {$table_name} WHERE {$field_name} = ? LIMIT 1";
+    $bind_param = array( $field_value );
+    if( 1 > strlen($field_value) )
     {
-        $sql = "SELECT * FROM ac_privilege WHERE id_privilege = ? LIMIT 1";
-        $bind_param = array( $id_privilege );
+        $sql = "SELECT * FROM {$table_name} WHERE {$primary_key_name} = ? LIMIT 1";
+        $bind_param = array( $primary_key_value );
     }
 
     $rows = db_select_data($sql, $bind_param);
     if( !isset($rows[0]) )
-        return array( 'id_privilege' => 0 );
+        return array( $primary_key_name => 0 );
 
     return $rows[0];
 }
 
-
+function db_delete_rule( $id_rule )
+{
+    $sql = "DELETE A.*, B.* FROM ac_rule AS A, ac_rule_resource_privilege AS B
+         WHERE B.id_rule = A.id_rule AND A.id_rule = ?";
+    $stmt = NULL;
+    return db_execute_sql($stmt, $sql, array( $id_rule ) );
+}
 
 
 
