@@ -94,7 +94,22 @@ function db_delete_data($table, $where, $values)
 {
     $sql = "DELETE FROM {$table} WHERE {$where}";
     $stmt = NULL;
-    return db_execute_sql($stmt, $sql, $values );
+    return db_execute_sql($stmt, $sql, $values);
+}
+
+function db_select_data_ex( $table, $where_field, $values )
+{
+    $sql = "SELECT * FROM {$table} WHERE";
+    for( $i = 0; $i < count($where_field); $i++ )
+    {
+        if( 0 === $i )
+            $sql = $sql . " {$fiwhere_fieldelds[$i]} = ?";
+        else
+            $sql = $sql . ", {$where_field[$i]} = ?";
+    }
+
+    $stmt = NULL;
+    return db_execute_sql($stmt, $sql, $values);
 }
 
 function db_update_data_ex( $table, $row, $primary_key_name )

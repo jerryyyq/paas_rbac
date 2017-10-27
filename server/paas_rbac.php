@@ -28,10 +28,13 @@ $allowed_funtion = array(
     'rule_resource_privilege_info_get',
     'rule_resource_privilege_add',
     'rule_resource_privilege_delete',
+    'sys_admin_rule_info_get',
     'sys_admin_rule_add',
     'sys_admin_rule_delete',
+    'enterprise_admin_rule_info_get',
     'enterprise_admin_rule_add',
     'enterprise_admin_rule_delete',
+    'user_rule_info_get',
     'user_rule_add',
     'user_rule_delete',
 
@@ -480,6 +483,18 @@ function rule_resource_privilege_add( $args )
         return $result;
     }
 
+    // 如果已存在则直接返回
+    $rule_privilege_info = db_select_data_ex( 'ac_rule_resource_privilege', 
+        array('id_rule', 'id_resource', 'id_privilege'), 
+        array($args['id_rule'], $args['id_resource'], $args['id_privilege']) );
+    
+    if( 0 < $rule_privilege_info['id'] )
+    {
+        $result['id'] = $rule_privilege_info['id'];
+        return $result;
+    }
+
+    // 插入数据
     $result['id'] = db_insert_data_ex( 'ac_rule_resource_privilege', $args, 'id' );
     
     // 添加操作日志
@@ -508,24 +523,178 @@ function rule_resource_privilege_delete( $args )
 
     // 添加操作日志
     db_add_admin_operation_log( $_SESSION['id_user'], 0, 'rule_resource_privilege_delete', $args['id'], 121, 
-        '删除角色权限：id_rule = ' . $args['id'] . ' id_resource = ' . $rule_privilege_info['id_resource'] . ' id_privilege = ' . $rule_privilege_info['id_privilege']  );
+        '删除角色权限：id_rule = ' . $rule_privilege_info['id_rule'] . ' id_resource = ' . $rule_privilege_info['id_resource'] . ' id_privilege = ' . $rule_privilege_info['id_privilege']  );
     return $result;
 }
 
-function add_sys_admin_rule( $args )
+function sys_admin_rule_info_get( $args )
+{
+    $result = comm_check_parameters( $args, array('id') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['sys_admin_rule_info'] = db_get_some_table_info( 'ac_sys_admin_rule', '', '', 'id', $args['id'] );
+    return $result;
+}
+
+function sys_admin_rule_add( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_admin', 'id_rule'), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $admin_info = db_get_some_table_info( 'sys_admin', '', '', 'id_admin', $args['id_admin'] );
+    if( 1 > int($admin_info['id_admin']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_admin 不存在，请检查';
+        return $result;
+    }
+
+    $rule_info = db_get_some_table_info( 'ac_rule', '', '', 'id_rule', $args['id_rule'] );
+    if( 1 > int($rule_info['id_rule']) )    
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_rule 不存在，请检查';
+        return $result;
+    }
+
+    // 如果已存在则直接返回
+    $sys_admin_rule_info = db_select_data_ex( 'ac_sys_admin_rule', 
+        array('id_admin', 'id_rule'), 
+        array($args['id_admin'], $args['id_rule']) );
+    
+    if( 0 < $sys_admin_rule_info['id'] )
+    {
+        $result['id'] = $sys_admin_rule_info['id'];
+        return $result;
+    }
+
+    // 插入数据
+    $result['id'] = db_insert_data_ex( 'ac_sys_admin_rule', $args, 'id' );
+    
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'sys_admin_rule_add', $result['id'], 130, 
+        '添加系统管理员角色：id_admin = ' . $args['id_admin'] . ' id_rule = ' . $args['id_rule'] );
+    return $result;
+}
+
+function sys_admin_rule_delete( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id'), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 不存在，直接返回成功
+    $sys_admin_rule_info = db_get_some_table_info( 'ac_sys_admin_rule', '', '', 'id', $args['id'] );
+    if( 1 > int($sys_admin_rule_info['id']) )
+        return $result;
+
+    if( !db_delete_data( 'ac_sys_admin_rule', 'id=?', array($args['id']) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'sys_admin_rule_delete', $args['id'], 131, 
+        '删除系统管理员角色：id_admin = ' . $sys_admin_rule_info['id_admin'] . ' id_rule = ' . $sys_admin_rule_info['id_rule']  );
+    return $result;
+}
+
+function enterprise_admin_rule_info_get( $args )
+{
+    $result = comm_check_parameters( $args, array('id') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['enterprise_admin_rule_info'] = db_get_some_table_info( 'ac_enterprise_admin_rule', '', '', 'id', $args['id'] );
+    return $result;
+}
+
+function enterprise_admin_rule_add( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_admin', 'id_rule'), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $admin_info = db_get_some_table_info( 'enterprise_admin', '', '', 'id_admin', $args['id_admin'] );
+    if( 1 > int($admin_info['id_admin']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_admin 不存在，请检查';
+        return $result;
+    }
+
+    $rule_info = db_get_some_table_info( 'ac_rule', '', '', 'id_rule', $args['id_rule'] );
+    if( 1 > int($rule_info['id_rule']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_rule 不存在，请检查';
+        return $result;
+    }
+
+    // 如果已存在则直接返回
+    $enterprise_admin_rule_info = db_select_data_ex( 'ac_enterprise_admin_rule',
+        array('id_admin', 'id_rule'),
+        array($args['id_admin'], $args['id_rule']) );
+    
+    if( 0 < $enterprise_admin_rule_info['id'] )
+    {
+        $result['id'] = $enterprise_admin_rule_info['id'];
+        return $result;
+    }
+
+    // 插入数据
+    $result['id'] = db_insert_data_ex( 'ac_enterprise_admin_rule', $args, 'id' );
+    
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_rule_add', $result['id'], 140, 
+        '添加企业管理员角色：id_admin = ' . $args['id_admin'] . ' id_rule = ' . $args['id_rule'] );
+    return $result;
+}
+
+function enterprise_admin_rule_delete( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id'), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 不存在，直接返回成功
+    $enterprise_admin_rule_info = db_get_some_table_info( 'ac_enterprise_admin_rule', '', '', 'id', $args['id'] );
+    if( 1 > int($enterprise_admin_rule_info['id']) )
+        return $result;
+
+    if( !db_delete_data( 'ac_enterprise_admin_rule', 'id=?', array($args['id']) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_rule_delete', $args['id'], 141, 
+        '删除企业管理员角色：id_admin = ' . $enterprise_admin_rule_info['id_admin'] . ' id_rule = ' . $enterprise_admin_rule_info['id_rule']  );
+    return $result;
+}
+
+function user_rule_info_get( $args )
 {
 
 }
 
-function add_enterprise_admin_rule( $args )
+function user_rule_add( $args )
 {
 
 }
 
-function add_user_rule( $args )
+function user_rule_delete( $args )
 {
 
 }
+
+
 
 
 function sys_admin_add( $args )

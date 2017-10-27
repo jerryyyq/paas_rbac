@@ -29,7 +29,8 @@ CREATE TABLE `ac_enterprise_admin_rule` (
   `id_admin` int(11) DEFAULT NULL,
   `id_rule` int(11) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `index2` (`id_admin`,`id_rule`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -161,7 +162,8 @@ CREATE TABLE `ac_sys_admin_rule` (
   `id_admin` int(11) DEFAULT NULL,
   `id_rule` int(11) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `index2` (`id_admin`,`id_rule`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -187,7 +189,8 @@ CREATE TABLE `ac_user_rule_` (
   `id_user` int(11) DEFAULT NULL,
   `id_rule` int(11) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `index2` (`id_user`,`id_rule`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -440,4 +443,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-10-26 23:28:03
+-- Dump completed on 2017-10-27 23:50:09

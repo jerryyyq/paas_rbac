@@ -27,7 +27,8 @@ define( 'CREATE_USER_RULE_TABLE', "CREATE TABLE `ac_user_rule_%s` (
     `id_user` int(11) DEFAULT NULL,
     `id_rule` int(11) DEFAULT NULL,
     `description` varchar(256) DEFAULT NULL,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    KEY `index2` (`id_user`,`id_rule`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;" );
 
 
