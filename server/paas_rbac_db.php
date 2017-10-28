@@ -19,7 +19,9 @@ define( 'CREATE_USER_TABLE', "CREATE TABLE `user_%s` (
     `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
     `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
     `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id_user`)
+    PRIMARY KEY (`id_user`),
+    UNIQUE KEY `email_UNIQUE` (`email`),
+    UNIQUE KEY `mobile_UNIQUE` (`mobile`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;" );
 
 define( 'CREATE_USER_RULE_TABLE', "CREATE TABLE `ac_user_rule_%s` (

@@ -286,7 +286,9 @@ CREATE TABLE `enterprise_admin` (
   `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
   `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
   `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
-  PRIMARY KEY (`id_admin`)
+  PRIMARY KEY (`id_admin`),
+  UNIQUE KEY `email_UNIQUE` (`email`),
+  UNIQUE KEY `mobile_UNIQUE` (`mobile`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -320,7 +322,9 @@ CREATE TABLE `sys_admin` (
   `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
   `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
   `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
-  PRIMARY KEY (`id_admin`)
+  PRIMARY KEY (`id_admin`),
+  UNIQUE KEY `email_UNIQUE` (`email`),
+  UNIQUE KEY `mobile_UNIQUE` (`mobile`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -388,7 +392,9 @@ CREATE TABLE `user_` (
   `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
   `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
   `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_user`)
+  PRIMARY KEY (`id_user`),
+  UNIQUE KEY `email_UNIQUE` (`email`),
+  UNIQUE KEY `mobile_UNIQUE` (`mobile`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -443,4 +449,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-10-27 23:50:09
+-- Dump completed on 2017-10-28 23:26:14
