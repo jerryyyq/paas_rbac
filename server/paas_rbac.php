@@ -60,7 +60,9 @@ $allowed_funtion = array(
     'website_info_get',
     'website_add',
     'website_delete',
-    'website_modify'
+    'website_modify',
+
+    'user_register'
 );
 
 
@@ -834,7 +836,7 @@ function sys_admin_add( $args )
     $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
 
     // 加入数据库
-    $args['state'] = 0;
+    $args['state'] = 1;
     $args['wx_unionid'] = '';
     $args['wx_openid'] = '';
     $result['id_admin'] = db_insert_data_ex( 'sys_admin', $args, 'id_admin' );
@@ -913,7 +915,7 @@ function enterprise_admin_add( $args )
     $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
 
     // 加入数据库
-    $args['state'] = 0;
+    $args['state'] = 1;
     $args['wx_unionid'] = '';
     $args['wx_openid'] = '';
     $result['id_admin'] = db_insert_data_ex( 'enterprise_admin', $args, 'id_admin' );
@@ -981,12 +983,10 @@ function user_add( $args )
         return $result;
 
     $website_info = db_get_some_table_info( 'website', 'symbol_name', '', 'id_website', $arg['id_website'] );
-
-    // 检查当前管理员是否有权限
-    if( !__have_resource_privilege_ex( $website_info['id_enterprise'], 'user_add' ) )
+    if( 1 > int($website_info['id_website']) )
     {
-        $result['err'] = -2;
-        $result['err_msg'] = '没有相应权限';
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_website 不存在，请检查';
         return $result;
     }
 
@@ -1005,7 +1005,9 @@ function user_add( $args )
     $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
 
     // 加入数据库
-    $args['state'] = 0;
+    $args['state'] = 1;
+    $args['email_verify_state'] = 1;
+    $args['mobile_verify_state'] = 1;
     $args['wx_unionid'] = '';
     $args['wx_openid'] = '';
     $result['id_user'] = db_insert_data_ex( $table_name, $args, 'id_user' );
@@ -1259,6 +1261,48 @@ function website_modify( $args )
     // 添加操作日志
     db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 'website_modify', 
         $args['id_website'], 312, '修改站点信息：symbol_name = ' . $args['symbol_name'] );
+    return $result;
+}
+
+function user_register( $args )
+{
+    $result = comm_check_parameters( $args, array('id_website', 'name', 'email', 'mobile', 'password') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $website_info = db_get_some_table_info( 'website', 'symbol_name', '', 'id_website', $arg['id_website'] );
+    if( 1 > int($website_info['id_website']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_website 不存在，请检查';
+        return $result;
+    }
+
+    // 获得用户表名
+    $table_name = 'user_' . $arg['id_website'];
+    $user_info = db_get_user_info( $table_name, 'id_user', 0, '', $args['email'] );
+    if( 0 < int($user_info['id_user']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'email 已存在，请换一个';
+        return $result;
+    }
+
+    // 计算 password
+    $args['salt'] = '';
+    $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
+
+    // 加入数据库
+    $args['state'] = 0;
+    $args['email_verify_state'] = 0;
+    $args['mobile_verify_state'] = 0;
+    $args['wx_unionid'] = '';
+    $args['wx_openid'] = '';
+    $result['id_user'] = db_insert_data_ex( $table_name, $args, 'id_user' );
+
+    // 缺：验证 email 和 mobile
+
+
     return $result;
 }
 

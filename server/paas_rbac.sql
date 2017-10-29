@@ -382,7 +382,7 @@ CREATE TABLE `user_` (
   `salt` varchar(128) DEFAULT NULL,
   `password` varchar(512) DEFAULT NULL,
   `real_name` varchar(128) DEFAULT NULL,
-  `state` int(11) DEFAULT '0',
+  `state` int(11) DEFAULT '0' COMMENT '用户的状态：例如是否激活、注销等等',
   `id_channel` int(11) DEFAULT '0' COMMENT '是从哪个渠道加过来的。0 为非渠道用户。',
   `oauth_platform_type` varchar(128) DEFAULT NULL COMMENT '第三方登录平台类型。‘’ 和 ‘0’ 表示没有第三方登录平台关联帐号；‘1’ 是微信 unionid；‘2’是微信 openid；''3''是 QQ；‘4’是新浪；',
   `wx_unionid` varchar(128) DEFAULT NULL,
@@ -392,6 +392,12 @@ CREATE TABLE `user_` (
   `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
   `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
   `registe_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `email_verify_state` int(11) DEFAULT '0' COMMENT '邮件地址校验状态。0=未校验；1=校验成功；2=已发校验码。',
+  `email_verify_code` varchar(128) DEFAULT NULL COMMENT '邮件地址校验码。',
+  `email_verify_code_send_time` datetime DEFAULT NULL COMMENT '邮件地址校验码发送时间。',
+  `mobile_verify_state` int(11) DEFAULT '0' COMMENT '手机校验状态。0=未校验；1=校验成功；2=已发校验码。',
+  `mobile_verify_code` varchar(128) DEFAULT NULL COMMENT '手机校验码。',
+  `mobile_verify_code_send_time` datetime DEFAULT NULL COMMENT '手机校验码发送时间。',
   PRIMARY KEY (`id_user`),
   UNIQUE KEY `email_UNIQUE` (`email`),
   UNIQUE KEY `mobile_UNIQUE` (`mobile`)
@@ -449,4 +455,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-10-28 23:26:14
+-- Dump completed on 2017-10-29 22:55:57
