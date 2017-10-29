@@ -105,6 +105,19 @@ function db_set_user_password( $table_name, $primary_key_name, $id_user, $salt, 
         $primary_key_name . '= ?', array($salt, $password, $id_user) );
 }
 
+// 查看是否有其他用户存在同样的值
+function db_get_other_object_info( $table_name, $field_name, $field_value, $primary_key_name, $self_primary_key_value )
+{
+    $sql = "SELECT * FROM {$table_name} WHERE {$field_name} = ? AND {$primary_key_name} != ?";
+    $rows = db_select_data( $sql, array($field_value, $self_primary_key_value) );
+    if( !isset($rows[0]) )
+        return array($primary_key_name => 0);
+
+    unset( $rows[0]['salt'] );
+    unset( $rows[0]['password'] );
+    return $rows[0];    
+}
+
 function db_get_some_table_info( $table_name, $field_name, $field_value, $primary_key_name, $primary_key_value = 0 )
 {
     $sql = "SELECT * FROM {$table_name} WHERE {$field_name} = ? LIMIT 1";
@@ -128,43 +141,6 @@ function db_delete_rule( $id_rule )
          WHERE B.id_rule = A.id_rule AND A.id_rule = ?";
     $stmt = NULL;
     return db_execute_sql($stmt, $sql, array( $id_rule ) );
-}
-
-
-
-
-function db_get_enterprise_info( $symbol_name, $id_enterprise = 0 )
-{
-    $sql = "SELECT * FROM enterprise WHERE symbol_name = ? LIMIT 1";
-    $bind_param = array( $symbol_name );
-    if( 1 > strlen($symbol_name) )
-    {
-        $sql = "SELECT * FROM enterprise WHERE id_enterprise = ? LIMIT 1";
-        $bind_param = array( $id_enterprise );
-    }
-
-    $rows = db_select_data($sql, $bind_param);
-    if( !isset($rows[0]) )
-        return array( 'id_enterprise' => 0 );
-
-    return $rows[0];
-}
-
-function db_get_website_info( $symbol_name, $id_website = 0 )
-{
-    $sql = "SELECT * FROM website WHERE symbol_name = ? LIMIT 1";
-    $bind_param = array( $symbol_name );
-    if( 1 > strlen($symbol_name) )
-    {
-        $sql = "SELECT * FROM enterprise WHERE id_website = ? LIMIT 1";
-        $bind_param = array( $id_website );
-    }
-
-    $rows = db_select_data($sql, $bind_param);
-    if( !isset($rows[0]) )
-        return array( 'id_website' => 0 );
-
-    return $rows[0];
 }
 
 function db_get_user_resource_privilege( $table_name, $primary_key_name, $id_user )

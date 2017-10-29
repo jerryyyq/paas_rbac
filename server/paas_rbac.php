@@ -41,17 +41,26 @@ $allowed_funtion = array(
     'sys_admin_info_get',
     'sys_admin_add',
     'sys_admin_delete',
+    'sys_admin_modify',
     'enterprise_admin_info_get',
     'enterprise_admin_add',
     'enterprise_admin_delete',
+    'enterprise_admin_modify',
     'user_info_get',
     'user_add',
     'user_delete',
+    'user_modify',
 
     'enterprise_symbol_name_exist',
+    'enterprise_info_get',
     'enterprise_add',
+    'enterprise_delete',
+    'enterprise_modify',
     'website_symbol_name_exist',
-    'website_add'
+    'website_info_get',
+    'website_add',
+    'website_delete',
+    'website_modify'
 );
 
 
@@ -101,6 +110,8 @@ function session_get_user_id( )
 function __do_login( $table_name, $primary_key_name, $email, $password )
 {
     global $debug;
+    $result = array('err' => 0, 'err_msg' => '', 'user_info' => array() );
+
     $id_user = db_check_user_password( $table_name, $primary_key_name, $email, $password );
     if( 0 < $id_user )
     {
@@ -211,6 +222,39 @@ function __check_parameters_and_privilege( $args, $mast_exist_parameters, $privi
     return $result;
 }
 
+// 修改用户信息，会自动过滤掉 salt, password
+function __modify_user_info( $table_name, $primary_key_name, $user_info )
+{
+    $result = array('err' => 0, 'err_msg' => '', 'user_info' => array() );
+    $other_user_info = db_get_other_object_info( 'sys_admin', 'email', $user_info['email'], 'id_admin', $user_info['id_admin'] );
+    if( 0 < int($other_user_info['id_admin']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'email 已存在，请换一个';
+        return $result;
+    }
+
+    $other_user_info = db_get_other_object_info( 'sys_admin', 'mobile', $user_info['mobile'], 'id_admin', $user_info['id_admin'] );
+    if( 0 < int($other_user_info['id_admin']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'mobile 已存在，请换一个';
+        return $result;
+    }
+
+    unset( $user_info['salt'] );
+    unset( $user_info['password'] );
+
+    if( !db_update_data_ex( 'sys_admin', $user_info, 'id_admin' ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+    }
+    
+    return $result;
+}
+
+
 ///////////////////////////////////////////////////////////////////////
 // 接口函数实现
 ///////////////////////////////////////////////////////////////////////
@@ -243,7 +287,7 @@ function enterprise_admin_login( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
+    $enterprise_info = db_get_some_table_info( 'enterprise', 'symbol_name', $args['symbol_name'], 'id_enterprise' );
     if( 1 > $enterprise_info['id_enterprise'] )
     {
         $result['err'] = -101;
@@ -269,7 +313,7 @@ function user_login( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    $website_info = db_get_website_info( $args['symbol_name'] );
+    $website_info = db_get_some_table_info( 'website', 'symbol_name', $args['symbol_name'], 'id_website' );
     if( 1 > $website_info['id_website'] )
     {
         $result['err'] = -101;
@@ -656,8 +700,8 @@ function enterprise_admin_rule_add( $args )
     $result['id'] = db_insert_data_ex( 'ac_enterprise_admin_rule', $args, 'id' );
     
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_rule_add', $result['id'], 140, 
-        '添加企业管理员角色：id_admin = ' . $args['id_admin'] . ' id_rule = ' . $args['id_rule'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_rule_add', 
+        $result['id'], 140, '添加企业管理员角色：id_admin = ' . $args['id_admin'] . ' id_rule = ' . $args['id_rule'] );
     return $result;
 }
 
@@ -680,8 +724,8 @@ function enterprise_admin_rule_delete( $args )
     }
 
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_rule_delete', $args['id'], 141, 
-        '删除企业管理员角色：id_admin = ' . $enterprise_admin_rule_info['id_admin'] . ' id_rule = ' . $enterprise_admin_rule_info['id_rule']  );
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_rule_delete', 
+        $args['id'], 141, '删除企业管理员角色：id_admin = ' . $enterprise_admin_rule_info['id_admin'] . ' id_rule = ' . $enterprise_admin_rule_info['id_rule']  );
     return $result;
 }
 
@@ -732,8 +776,8 @@ function user_rule_add( $args )
     $result['id'] = db_insert_data_ex( 'ac_user_rule_' . $args['id_website'], $args, 'id' );
     
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 'user_rule_add', $result['id'], 150, 
-        '添加用户角色：id_website = ' . $args['id_website'] . ' id_user = ' . $args['id_user'] . ' id_rule = ' . $args['id_rule'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 'user_rule_add', 
+        $result['id'], 150, '添加用户角色：id_website = ' . $args['id_website'] . ' id_user = ' . $args['id_user'] . ' id_rule = ' . $args['id_rule'] );
     return $result;
 }
 
@@ -756,14 +800,14 @@ function user_rule_delete( $args )
     }
 
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 'user_rule_delete', $args['id'], 151, 
-        '删除用户角色：id_website = ' . $args['id_website'] . ' id_user = ' . $user_rule_info['id_user'] . ' id_rule = ' . $user_rule_info['id_rule'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 'user_rule_delete', 
+        $args['id'], 151, '删除用户角色：id_website = ' . $args['id_website'] . ' id_user = ' . $user_rule_info['id_user'] . ' id_rule = ' . $user_rule_info['id_rule'] );
     return $result;
 }
 
 function sys_admin_info_get( $args )
 {
-    $result = comm_check_parameters( $args, array('id_admin') );
+    $result = __check_parameters_and_privilege( $args, array('id_admin'), 'sys_admin_read' );
     if( 0 != $result['err'] )
         return $result;
     
@@ -819,14 +863,30 @@ function sys_admin_delete( $args )
     }
 
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'sys_admin_delete', $args['id_admin'], 201, 
-        '删除系统管理员：email = ' . $admin_info['email'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'sys_admin_delete', 
+        $args['id_admin'], 201, '删除系统管理员：email = ' . $admin_info['email'] );
+    return $result;
+}
+
+function sys_admin_modify( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_admin', 'name', 'email', 'mobile'), 'sys_admin_modify' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result = __modify_user_info( 'sys_admin', 'id_admin', $args );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'sys_admin_modify', 
+        $args['id_admin'], 202, '修改系统管理员信息：email = ' . $args['email'] );
     return $result;
 }
 
 function enterprise_admin_info_get( $args )
 {
-    $result = comm_check_parameters( $args, array('id_admin') );
+    $result = __check_parameters_and_privilege( $args, array('id_admin'), 'enterprise_admin_read' );
     if( 0 != $result['err'] )
         return $result;
     
@@ -860,7 +920,7 @@ function enterprise_admin_add( $args )
     
     // 添加操作日志
     db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_add', 
-        $result['id_admin'], 202, '添加企业管理员：' . $args['email'] );
+        $result['id_admin'], 210, '添加企业管理员：' . $args['email'] );
     return $result;
 }
 
@@ -884,13 +944,29 @@ function enterprise_admin_delete( $args )
 
     // 添加操作日志
     db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_delete', 
-        $args['id_admin'], 203, '删除企业管理员：email = ' . $admin_info['email'] );
+        $args['id_admin'], 211, '删除企业管理员：email = ' . $admin_info['email'] );
+    return $result;
+}
+
+function enterprise_admin_modify( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_admin', 'name', 'email', 'mobile'), 'enterprise_admin_modify' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result = __modify_user_info( 'enterprise_admin', 'id_admin', $args );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_admin_modify', 
+        $args['id_admin'], 212, '修改企业管理员信息：email = ' . $args['email'] );
     return $result;
 }
 
 function user_info_get( $args )
 {
-    $result = comm_check_parameters( $args, array('id_website', 'id_user') );
+    $result = __check_parameters_and_privilege( $args, array('id_website', 'id_user'), 'user_read' );
     if( 0 != $result['err'] )
         return $result;
     
@@ -900,11 +976,11 @@ function user_info_get( $args )
 
 function user_add( $args )
 {
-    $result = comm_check_parameters( $args, array('id_website', 'name', 'email', 'mobile', 'password'), 'user_add' );
+    $result = __check_parameters_and_privilege( $args, array('id_website', 'name', 'email', 'mobile', 'password'), 'user_add' );
     if( 0 != $result['err'] )
         return $result;
 
-    $website_info = db_get_website_info( '', $arg['id_website'] );
+    $website_info = db_get_some_table_info( 'website', 'symbol_name', '', 'id_website', $arg['id_website'] );
 
     // 检查当前管理员是否有权限
     if( !__have_resource_privilege_ex( $website_info['id_enterprise'], 'user_add' ) )
@@ -936,7 +1012,7 @@ function user_add( $args )
 
     // 添加操作日志
     db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 'user_add', 
-        $result['id_user'], 204, '添加用户：id_website = '. $arg['id_website'] . ' email = ' . $args['email'] );
+        $result['id_user'], 220, '添加用户：id_website = '. $arg['id_website'] . ' email = ' . $args['email'] );
 
     return $result;
 }
@@ -961,7 +1037,23 @@ function user_delete( $args )
 
     // 添加操作日志
     db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 'user_delete', 
-        $args['id_user'], 205, '删除用户：id_website = '. $arg['id_website'] . ' email = ' . $user_info['email'] );
+        $args['id_user'], 221, '删除用户：id_website = '. $arg['id_website'] . ' email = ' . $user_info['email'] );
+    return $result;
+}
+
+function user_modify( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_website', 'id_user', 'name', 'email', 'mobile'), 'user_modify' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result = __modify_user_info( 'user_' . $arg['id_website'], 'id_user', $args );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 'user_modify', 
+        $args['id_user'], 222, '修改用户信息：email = ' . $args['email'] );
     return $result;
 }
 
@@ -972,10 +1064,20 @@ function enterprise_symbol_name_exist( $args )
         return $result;
     
     $result['exist'] = 0;
-    $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
+    $enterprise_info = db_get_some_table_info( 'enterprise', 'symbol_name', $args['symbol_name'], 'id_enterprise' );
     if( 0 < int($enterprise_info['id_enterprise']) )
         $result['exist'] = 1;
 
+    return $result;
+}
+
+function enterprise_info_get( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_enterprise'), 'enterprise_read' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['enterprise_info'] = db_get_some_table_info( 'enterprise', 'symbol_name', '', 'id_enterprise', $args['id_enterprise'] );
     return $result;
 }
 
@@ -985,7 +1087,7 @@ function enterprise_add( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    $enterprise_info = db_get_enterprise_info( $args['symbol_name'] );
+    $enterprise_info = db_get_some_table_info( 'enterprise', 'symbol_name', $args['symbol_name'], 'id_enterprise' );
     if( 0 < intval($enterprise_info['id_enterprise']) )
     {
         $result['err'] = -102;
@@ -996,8 +1098,59 @@ function enterprise_add( $args )
     $result['id_enterprise'] = db_insert_data_ex( 'enterprise', $args, 'id_enterprise' );
 
     // 添加操作日志
-    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_add', $result['id_enterprise'], 300, '添加企业：' . $args['symbol_name'] );
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_add', 
+        $result['id_enterprise'], 300, '添加企业：' . $args['symbol_name'] );
 
+    return $result;
+}
+
+function enterprise_delete( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_enterprise'), 'enterprise_delete' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 不存在，直接返回成功
+    $enterprise_info = db_get_some_table_info( 'enterprise', 'symbol_name', '', 'id_enterprise', $args['id_enterprise'] );
+    if( 1 > int($enterprise_info['id_enterprise']) )
+        return $result;
+
+    if( !db_delete_data( 'enterprise', 'id_enterprise=?', array($args['id_enterprise']) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_delete', 
+        $args['id_enterprise'], 301, '删除企业：symbol_name = '. $enterprise_info['symbol_name'] );
+    return $result;    
+}
+
+function enterprise_modify( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('symbol_name', 'real_name'), 'enterprise_modify' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $other_enterprise_info = db_get_other_object_info( 'enterprise', 'symbol_name', $args['symbol_name'], 'id_enterprise', $args['id_enterprise'] );
+    if( 0 < int($other_enterprise_info['id_enterprise']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'symbol_name 已存在，请换一个';
+        return $result;
+    }
+
+    if( !db_update_data_ex( 'enterprise', $args, 'id_enterprise' ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+    }
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], 0, 'enterprise_modify', 
+        $args['id_enterprise'], 302, '修改企业信息：symbol_name = ' . $args['symbol_name'] );
     return $result;
 }
 
@@ -1008,20 +1161,31 @@ function website_symbol_name_exist( $args )
         return $result;
     
     $result['exist'] = 0;
-    $website_info = db_get_website_info( $args['symbol_name'] );
+    $website_info = db_get_some_table_info( 'website', 'symbol_name', $args['symbol_name'], 'id_website' );
+    db_get_some_table_info( 'website', 'symbol_name', $args['symbol_name'], 'id_website' );
     if( 0 < intval($website_info['id_website']) )
         $result['exist'] = 1;
 
     return $result;
 }
 
-function website_add( $args )
+function website_info_get( $args )
 {
-    $result = __check_parameters_and_privilege( $args, array('id_enterprise', 'name', 'symbol_name'), 'website_add' );
+    $result = __check_parameters_and_privilege( $args, array('id_website'), 'website_read' );
     if( 0 != $result['err'] )
         return $result;
 
-    $website_info = db_get_website_info( $args['symbol_name'] );
+    $result['website_info'] = db_get_some_table_info( 'website', 'symbol_name', '', 'id_website', $args['id_website'] );
+    return $result;
+}
+
+function website_add( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_website', 'name', 'symbol_name'), 'website_add' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $website_info = db_get_some_table_info( 'website', 'symbol_name', $args['symbol_name'], 'id_website' );
     if( 0 < intval($website_info['id_website']) )
     {
         $result['err'] = -102;
@@ -1043,12 +1207,60 @@ function website_add( $args )
 
     // 添加操作日志
     db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 
-        'website_add', $result['id_website'], 301, '添加站点：' . $args['symbol_name'] );
+        'website_add', $result['id_website'], 310, '添加站点：symbol_name = ' . $args['symbol_name'] );
 
     return $result;
 }
 
+function website_delete( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id_website'), 'website_delete' );
+    if( 0 != $result['err'] )
+        return $result;
 
+    // 不存在，直接返回成功
+    $website_info = db_get_some_table_info( 'website', 'symbol_name', '', 'id_website', $args['id_website'] );
+    if( 1 > int($website_info['id_website']) )
+        return $result;
+
+    if( !db_delete_data( 'website', 'id_website=?', array($args['id_website']) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 'website_delete', 
+        $args['id_website'], 311, '删除站点：symbol_name = '. $website_info['symbol_name'] );
+    return $result;    
+}
+
+function website_modify( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('symbol_name', 'real_name'), 'website_modify' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $other_website_info = db_get_other_object_info( 'website', 'symbol_name', $args['symbol_name'], 'id_website', $args['id_website'] );
+    if( 0 < int($other_website_info['id_website']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'symbol_name 已存在，请换一个';
+        return $result;
+    }
+
+    if( !db_update_data_ex( 'website', $args, 'id_website' ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+    }
+
+    // 添加操作日志
+    db_add_admin_operation_log( $_SESSION['id_user'], $_SESSION['user_info']['id_enterprise'], 'website_modify', 
+        $args['id_website'], 312, '修改站点信息：symbol_name = ' . $args['symbol_name'] );
+    return $result;
+}
 
 ///////////////////////////////////////////////////////////////////////
 // test code
