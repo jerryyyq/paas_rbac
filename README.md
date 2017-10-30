@@ -181,7 +181,7 @@ PAAS 系统，应该有三个登录入口
 3. 最终用户登录入口
 * m=user_login
 * 入参：网站符号名，用户名，口令
-4. 出参：{ "err":0, "err_msg":"", "user_info":{}, user_privilege:['resource_privilege', 'privileges'] }
+4. 出参：{ "err":0, "err_msg":"", "user_info":{}, "user_privilege":['resource_privilege', 'privileges'] }
 
 ## 系统管理员
 系统管理员用于管理整个系统，他们可以按 "系统 RBAC" 进行分权。
@@ -202,10 +202,16 @@ PAAS 系统，应该有三个登录入口
 # API
 ## sys_admin_login( args = ['email', 'password'] )
 * 入参 args = ['email', 'password']
-* 出参中 data 为 user_info，内容为：['id_admin', 'name', 'type', ...]
+* 出参 user_info，内容为：['id_admin', 'name', 'type', ...]
     * 其中 type 为：0:sys, 1:enteprise, 2:websit
+* 出参 user_privilege，内容为：['resource_privilege', 'privileges']
+    * 其中 resource_privilege 为：资源权限数组； privileges 为权限数组。
 
 
+# yyq_frame
+这是一套由我开发的极简 PHP 后台 API 框架，以 json 作为输入输出参数格式。
+这套框架包含了极简的路由系统；封装了 mysql，memcache，log 三大基础组件。
+以 yyq_frame_main 做为主入口函数，包含了 API 名检查、API 参数检查、以及标准的错误输出。
 
 
 
