@@ -1,4 +1,11 @@
 <?php
+// Author: 杨玉奇
+// email: yangyuqi@sina.com
+// url: https://github.com/jerryyyq/paas_rbac
+// copyright yangyuqi
+// 著作权归作者 杨玉奇 所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+// date: 2017-09-22
+
 define('SERVER_DOMAIN_URL', 'https://www.pass_rbac.com/');
 define('LOG_LEVEL', 0);         // 0 debug; 1 info; 2 warn; 3 error; 4 fatal
 

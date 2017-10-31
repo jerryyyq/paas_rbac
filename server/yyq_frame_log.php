@@ -1,6 +1,12 @@
 <?php
-// by yangyuqi at 2017-07-09
-// 这下日志文件会写到文件所在目录下的 /log/ 目录下
+// Author: 杨玉奇
+// email: yangyuqi@sina.com
+// url: https://github.com/jerryyyq/paas_rbac
+// copyright yangyuqi
+// 著作权归作者 杨玉奇 所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+// date: 2017-09-22
+// 日志文件会写到文件所在目录下的 /tmp/phplogs/ 目录下
+
 include_once('yyq_frame_config.php');
 
 define('SPT', DIRECTORY_SEPARATOR);
