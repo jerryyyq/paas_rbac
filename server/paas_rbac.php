@@ -73,6 +73,7 @@ session_start();
 if( isset($_COOKIE['PHPSESSID']) )
     setcookie( 'PHPSESSID', session_id(), time() + COOKIE_OVER_TIME );
 
+$g_debug = false;
 if( isset($argv) )
     $g_debug = in_array('debug', $argv);
 
