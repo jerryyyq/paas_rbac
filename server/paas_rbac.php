@@ -2,9 +2,10 @@
 // 作者：杨玉奇
 // 命令行调试： $ php paas_rbac.php debug
 // php 命令行交互测试：$ php -a
+// require 'vendor/autoload.php';
 
-require_once('./yyq_frame.php');
-require_once('./yyq_frame_config.php');
+//require_once('./yyq_frame.php');
+//require_once('./yyq_frame_config.php');
 require_once('./paas_rbac_db.php');
 
 define( 'COOKIE_OVER_TIME', 86400 );         // session 与 cookie 过期时间：1 天过期
@@ -85,6 +86,11 @@ if( !$g_debug )
 
 
 //////////////////////// session 代码 ///////////////////////////
+function aaaa()
+{
+    return;
+}
+
 function session_set_user_info( $user_info )
 {
     $_SESSION['user_info'] = $user_info;
@@ -1321,8 +1327,8 @@ if( $g_debug )
     // $result = enterprise_add( array('symbol_name' => '企业在系统中的唯一标识符', 'real_name' => '企业名') );
     // print_r($result);
 
-    $result = website_add( array('id_enterprise' => 1, 'symbol_name' => '站点在系统中的唯一标识符', 'name' => '站点名') );
-    print_r($result);
+    // $result = website_add( array('id_enterprise' => 1, 'symbol_name' => '站点在系统中的唯一标识符', 'name' => '站点名') );
+    // print_r($result);
 }
 
 ?>

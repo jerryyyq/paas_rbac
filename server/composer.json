@@ -1,0 +1,5 @@
+{
+    "require": {
+        "yyq/minimalist_frame": ">=0.1.0"
+    }
+}

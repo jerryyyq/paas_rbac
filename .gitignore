@@ -1,3 +1,5 @@
 index.php
 .vscode/
 log/
+server/vendor
+server/composer.lock

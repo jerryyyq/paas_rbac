@@ -1,5 +1,6 @@
 <?php
-require_once('./yyq_frame.php');
+//require_once('./yyq_frame.php');
+require 'vendor/autoload.php';
 
 define( 'CREATE_USER_TABLE', "CREATE TABLE `user_%s` (
   `id_user` int(11) NOT NULL AUTO_INCREMENT,
