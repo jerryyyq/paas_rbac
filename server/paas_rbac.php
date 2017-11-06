@@ -1318,10 +1318,10 @@ if( $g_debug )
     echo '是否具有权限 enterprise_add：', __have_privilege_ex( 'enterprise_add' ), "\n";
     echo '是否具有资源权限 0, enterprise_add：', __have_resource_privilege_ex( 0, 'enterprise_add' ), "\n";
     
-    // $result = enterprise_add( array('symbol_name' => 'xxwenhua', 'real_name' => '潇湘文化公司') );
+    // $result = enterprise_add( array('symbol_name' => '企业在系统中的唯一标识符', 'real_name' => '企业名') );
     // print_r($result);
 
-    $result = website_add( array('id_enterprise' => 1, 'symbol_name' => 'xxfzi', 'name' => '潇湘妃子') );
+    $result = website_add( array('id_enterprise' => 1, 'symbol_name' => '站点在系统中的唯一标识符', 'name' => '站点名') );
     print_r($result);
 }
 

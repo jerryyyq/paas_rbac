@@ -382,7 +382,6 @@ CREATE TABLE `user_` (
   `salt` varchar(128) DEFAULT NULL,
   `password` varchar(512) DEFAULT NULL,
   `real_name` varchar(128) DEFAULT NULL COMMENT '真实姓名',
-  `pen_name` varchar(128) DEFAULT NULL COMMENT '笔名，只有成为作者才有效。',
   `state` int(11) DEFAULT '0' COMMENT '用户的状态：例如是否激活、注销等等',
   `id_channel` int(11) DEFAULT '0' COMMENT '是从哪个渠道加过来的。0 为非渠道用户。',
   `oauth_platform_type` varchar(128) DEFAULT NULL COMMENT '第三方登录平台类型。‘’ 和 ‘0’ 表示没有第三方登录平台关联帐号；‘1’ 是微信 unionid；‘2’是微信 openid；''3''是 QQ；‘4’是新浪；',
