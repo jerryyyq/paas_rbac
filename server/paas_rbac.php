@@ -86,11 +86,6 @@ if( !$g_debug )
 
 
 //////////////////////// session 代码 ///////////////////////////
-function aaaa()
-{
-    return;
-}
-
 function session_set_user_info( $user_info )
 {
     $_SESSION['user_info'] = $user_info;
