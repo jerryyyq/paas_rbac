@@ -1,5 +1,9 @@
 <?php
 // 作者：杨玉奇
+// nginx1.14 + php7.2 安装配置参考： https://blog.csdn.net/Ersan_Yi/article/details/82107552
+// 运行时错误在： /var/log/nginx
+//
+//
 // 命令行调试： $ php paas_rbac.php debug
 // php 命令行交互测试：$ php -a
 // require 'vendor/autoload.php';
@@ -11,7 +15,7 @@ require_once('./paas_rbac_db.php');
 define( 'COOKIE_OVER_TIME', 86400 );         // session 与 cookie 过期时间：1 天过期
 
 
-$allowed_funtion = array(
+$route_functions = array(
     'test',
     'sys_admin_login',
     'enterprise_admin_login',
@@ -70,6 +74,14 @@ $allowed_funtion = array(
 
 //////////////////////// 开始主功能 ///////////////////////////
 ini_set('session.gc_maxlifetime', COOKIE_OVER_TIME);
+
+// 设置：将 调用方法、参数、返回值 写入日志
+comm_set_run_config( array('log_io' => true) );
+
+// 设置：以宽松模式检查 SQL 语句
+comm_set_run_config( array('sql_injecte_loose' => true) );
+
+
 session_start();
 if( isset($_COOKIE['PHPSESSID']) )
     setcookie( 'PHPSESSID', session_id(), time() + COOKIE_OVER_TIME );
@@ -80,7 +92,8 @@ if( isset($argv) )
 
 if( !$g_debug )
 {
-    yyq_frame_main( $allowed_funtion );
+    // 调用主路由函数
+    comm_frame_main( $route_functions, 'm', 'a' );
     exit( 0 );
 }
 
@@ -113,14 +126,14 @@ function session_get_user_id( )
 
 function __do_login( $table_name, $primary_key_name, $email, $password )
 {
-    global $debug;
+    global $g_debug, $g_mysql;
     $result = array('err' => 0, 'err_msg' => '', 'user_info' => array() );
 
     $id_user = db_check_user_password( $table_name, $primary_key_name, $email, $password );
     if( 0 < $id_user )
     {
         $user_info = db_get_user_info( $table_name, $primary_key_name, $id_user );
-        if( $debug )
+        if( $g_debug )
         {
             print_r( $user_info );
         }
@@ -179,13 +192,13 @@ function __have_privilege_ex( $privilege_name )
 
 function __have_resource_privilege( $user_privilege, $id_resource, $privilege_name )
 {
-    global $debug;
+    global $g_debug;
     $key = __have_privilege( $user_privilege, $privilege_name );
     if( 0 > $key )
         return false;
 
     $privilege = $user_privilege['privileges'][$key];
-    if( $debug )
+    if( $g_debug )
     {
         echo 'privilege: ';
         print_r($privilege);
@@ -287,11 +300,13 @@ function sys_admin_login( $args )
 
 function enterprise_admin_login( $args )
 {
+    global $g_mysql;
     $result = comm_check_parameters( $args, array('symbol_name', 'email', 'password') );
     if( 0 != $result['err'] )
         return $result;
 
-    $enterprise_info = db_get_some_table_info( 'enterprise', 'symbol_name', $args['symbol_name'], 'id_enterprise' );
+    // $enterprise_info = db_get_some_table_info( 'enterprise', 'symbol_name', $args['symbol_name'], 'id_enterprise' );
+    $enterprise_info = $g_mysql->selectDataEx('enterprise', array('symbol_name'), array($args['symbol_name']));
     if( 1 > $enterprise_info['id_enterprise'] )
     {
         $result['err'] = -101;
@@ -313,11 +328,13 @@ function enterprise_admin_login( $args )
 
 function user_login( $args )
 {
+    global $g_mysql;
     $result = comm_check_parameters( $args, array('symbol_name', 'email', 'password') );
     if( 0 != $result['err'] )
         return $result;
 
-    $website_info = db_get_some_table_info( 'website', 'symbol_name', $args['symbol_name'], 'id_website' );
+    // $website_info = db_get_some_table_info( 'website', 'symbol_name', $args['symbol_name'], 'id_website' );
+    $website_info = $g_mysql->selectDataEx('website', array('symbol_name'), array($args['symbol_name']));
     if( 1 > $website_info['id_website'] )
     {
         $result['err'] = -101;
@@ -338,6 +355,16 @@ function user_login( $args )
 
     return $result;
 }
+
+
+
+
+
+
+
+
+
+
 
 function change_password( $args )
 {
@@ -398,11 +425,13 @@ function have_resource_privilege( $args )
 
 function privilege_info_get( $args )
 {
+    global $g_mysql;
     $result = comm_check_parameters( $args, array('name') );
     if( 0 != $result['err'] )
         return $result;
 
-    $result['privilege_info'] = db_get_some_table_info( 'ac_privilege', 'name', $args['name'], 'id_privilege' );
+    //$result['privilege_info'] = db_get_some_table_info( 'ac_privilege', 'name', $args['name'], 'id_privilege' );
+    $result['privilege_info'] = $g_mysql->selectDataEx('ac_privilege', array('name'), array($args['name']))[0];
     return $result;
 }
 

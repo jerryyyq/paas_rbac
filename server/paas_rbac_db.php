@@ -41,12 +41,17 @@ define( 'CREATE_USER_RULE_TABLE', "CREATE TABLE `ac_user_rule_%s` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;" );
 
 
+// 如果需要使用数据库，可以在这里配置
+$g_mysql = comm_create_default_mysql( 'localhost', 'paas_rbac', 'root', 'yyqet' );
+
+
 // 返回值：0 == 用户不存在；大于 0 == 用户 id；-1 == 口令错误；-2 == 帐号未激活
 function db_check_user_password( $table_name, $primary_key_name, $email, $password )
 {
+    global $g_mysql;
     $sql = "SELECT {$primary_key_name},name,email,salt,password,state FROM {$table_name} WHERE email = ? OR mobile = ? LIMIT 1";
     $bind_param = array($email, $email);
-    $rows = db_select_data($sql, $bind_param);
+    $rows = $g_mysql->selectData($sql, $bind_param);
     if( !isset($rows[0]) )
         return 0;
 
@@ -61,45 +66,41 @@ function db_check_user_password( $table_name, $primary_key_name, $email, $passwo
     if( intval($user['state']) != 1 )
         return -2;
 
-    if( $user['nickname'] == '' )
-    {
-        db_update_data( $table_name, array('name'), $primary_key_name . ' = ?', array($email, $user[$primary_key_name]) );
-    }
-
     return (int)$user[$primary_key_name]; 
 }
 
-function db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_unionid = '', $email = '' )
+function db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_openid = '', $email = '' )
 {
-    $sql = "SELECT * FROM {$table_name} WHERE ";
+    global $g_mysql;
 
+    $fields = array();
     $bind_param = array();
     if( 0 < intval($id_user) )
     {
-        $sql = $sql . $primary_key_name . ' = ?';
+        $fields[0] = $primary_key_name;
         $bind_param[0] = $id_user;
     }
-    else if( 0 < strlen($wx_unionid) )
+    else if( 0 < strlen($wx_openid) )
     {
-        $sql = $sql . 'weixinopenid = ?';
-        $bind_param[0] = $wx_unionid;
+        $fields[0] = 'weixinopenid';
+        $bind_param[0] = $wx_openid;
     }
     else if( 0 < strlen($email) )
     {
-        $sql = $sql . 'email = ?';
+        $fields[0] = 'email';
         $bind_param[0] = $email;
     }    
 
-    $rows = db_select_data($sql, $bind_param);
+    $rows = $g_mysql->selectDataEx($table_name, $fields, $bind_param);
     if( !isset($rows[0]) )
         return array($primary_key_name => 0);
 
     return $rows[0];
 }
 
-function db_get_user_info( $table_name, $primary_key_name, $id_user, $wx_unionid = '', $email = '' )
+function db_get_user_info( $table_name, $primary_key_name, $id_user, $wx_openid = '', $email = '' )
 {
-    $user_info = db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_unionid, $email);
+    $user_info = db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_openid, $email);
     unset( $user_info['salt'] );
     unset( $user_info['password'] );
 
@@ -152,12 +153,13 @@ function db_delete_rule( $id_rule )
 
 function db_get_user_resource_privilege( $table_name, $primary_key_name, $id_user )
 {
+    global $g_mysql;
     $sql = "SELECT C.* FROM ac_rule_resource_privilege AS C, {$table_name} AS D 
             WHERE C.id_rule = D.id_rule AND D.{$primary_key_name} = ?";
     
     $bind_param = array( $id_user );
 
-    $rows = db_select_data($sql, $bind_param);
+    $rows = $g_mysql->$g_mysql($sql, $bind_param);
 
     $user_privilege['resource_privilege'] = $rows;
 

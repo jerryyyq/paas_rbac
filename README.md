@@ -158,8 +158,8 @@ server 目录下是服务器端 PHP 代码与数据库建库脚本
 
 
 ## 入参与出参
-* 所有的入参都封装到 json 串中，GET 为 args 参数，POST 时直接为 body，也可以为 args 参数
-    * 统一的 URL 为 https://www.xxxxx.com/pass_rbac.php?m=some_api_name&args={"a":aaa,"b":bbb}
+* 所有的入参都封装到 json 串中，GET 为 a 参数，POST 时直接为 body，也可以为 a 参数
+    * 统一的 URL 为 https://www.xxxxx.com/pass_rbac.php?m=some_api_name&a={"a":aaa,"b":bbb}
 * 所有的应答返回值都封装到 json 串中，{"err":0, "err_msg":"", "data":{}}
     * err 为应答码，0 表示成功，其它值表示失败。应用错误码从 -100 开始。
     * err_msg 为具体错误信息
