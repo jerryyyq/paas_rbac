@@ -21,87 +21,75 @@ server 目录下是服务器端 PHP 代码与数据库建库脚本
 　　    　　   │  ...
 　　    　　   └─ web 站点 N
 ```
-所有网站的资源与角色模型是一样的，所以 ac_rule_resource_privilege 只有一个表，不区分网站。
-只有不同网站的用户对应不同的权限组。
-所以，每个网站有自己独立的：user_ 和 ac_user_rule_ 表。
+系统管理站点、企业管理站点和终端用户站点应分开，所以要分为三套独立的前后端程序。
+系统采用统一的用户表，一个用户登录这三类站点时，这三类站点的后台分别去检查相应的权限。
+所有网站的资源与角色模型是一样的。
 
+## 概念描述
+* 资源: 可以被访问的对象，系统、企业、网站等（或将来其他的数据）。一个资源是否可以被访问或以何种方法被访问，由权限来控制。资源并没有独立的表。在其他表中对资源的引用通过两个字段：resource_type 和 id_resource。目前 resource_type 有三个可选值：0:sys, 1:enteprise, 2:websit；根据不同的 resource_type 去对应不同的具体 id_resource。例如 当 resource_type == 1 时，id_resource 的值就是 id_enteprise。
+
+* 权限：是最小权利描述项，权限可以有父子关系，权限将会控制资源被访问的方式。
+* 角色：是一组权限的权限包，方便为用户赋权。角色不包含资源与权限的关联关系。
+* 用户：同一个用户既可以是某个企业的超级管理员，也可以是另一个企业的日志管理员，所有的控制都是由“用户-资源-角色表”描述的。
+* 用户-资源-角色表：最核心的为用户赋权的数据库表。
 
 ## 数据模型
 ### ac_privilege
-权限表，记录全系统内所有的权限，例如：修改、增加、读取、删除、执行。
-
-权限支持也仅支持 2 级权限。
+权限表，记录全系统内所有的权限，例如：修改、增加、读取、删除、执行。权限支持多级权限。
 * id_privilege 主键
 * id_father 父权限的 id_privilege 值。如果该值为 0，表示本身是顶级权限
-* name 标识名，用在系统内进行权限判断时使用
-* show_name 显示名，方便阅读
-
-### ac_resource
-资源表，记录系统内所有需要被权限隔离的资源，这些资源分三类：系统的，企业的，web 站点的
-* id_resource 主键
-* type 类型 0:sys, 1:enteprise, 2:websit ...
-* relation_id 关联 id，可能是 管理员 id, 企业 id, websit id, 行为 id 等；也可能是 0，表示无关联项
+* have_child 是否有子权限, 用于支持多层级权限系统。如果该值为 0，表示没有子权限。
 * name 标识名，用在系统内进行权限判断时使用
 * show_name 显示名，方便阅读
 
 ### ac_rule
 角色表，记录系统内所有的角色，这些角色分三类：系统的，企业的，web 站点的
 * id_rule 主键
-* type 类型 0:sys, 1:enteprise, 2:websit ...
+* resource_type 保留使用，可以忽略。0:sys, 1:enteprise, 2:websit ...
 * name 标识名，用在系统内进行权限判断时使用
 * show_name 显示名，方便阅读
 * description 附加描述
 
-### ac_rule_resource_privilege
-角色、资源、权限 关联表。一个角色可以关联多个资源及资源相对应的权限，或者关联多个与资源无关的权限
+### ac_rule_privilege
+角色、权限 关联表。一个角色可以关联多个权限
 * id
 * id_rule
-* id_resource
 * id_privilege
 * description 附加描述
 
-### ac_sys_admin_rule
-系统管理员的用户与角色关联表
+### ac_user_resource_rule
+用户、资源、角色 关联表。一个用户可以关联多个资源的多个角色。
 * id
-* id_admin
+* id_user
 * id_rule
+* resource_type 保留使用，可以忽略。
+* id_resource
+* description 附加描述
 
-### ac_enterprise_admin_rule
-企业管理员的用户与角色关联表
-* id
-* id_admin
-* id_rule
-
-### sys_admin
-* id_admin
-* name
+### ac_user
+* id_user
+* name 用户名
 * email
 * mobile
 * salt
 * password
 * real_name
-* state
+* state 用户的状态：例如是否激活、注销等等
+* id_channel 是从哪个渠道加过来的
+* oauth_platform_type 第三方登录平台类型
 * wx_unionid
 * wx_openid
-* registe_date
+* qq_openid
+* sina_openid
 * token 用于跨站点统一登录，无此需求可以忽略
 * token_create_time token 创建时间
-
-### enterprise_admin
-* id_admin
-* id_enterprise 所属企业
-* name
-* email
-* mobile
-* salt
-* password
-* real_name
-* state
-* wx_unionid
-* wx_openid
-* registe_date
-* token 用于跨站点统一登录，无此需求可以忽略
-* token_create_time token 创建时间
+* registe_date 注册时间
+* email_verify_state
+* email_verify_code
+* email_verify_code_send_time
+* mobile_verify_state
+* mobile_verify_code
+* mobile_verify_code_send_time
 
 ### enterprise
 企业表
@@ -115,7 +103,6 @@ server 目录下是服务器端 PHP 代码与数据库建库脚本
 * description
 * state 状态，默认为 0
 * registe_date 登记日期
-
 
 ### website
 * id_website 主键：网站 id
@@ -174,14 +161,12 @@ server 目录下是服务器端 PHP 代码与数据库建库脚本
 ## 系统登录入口
 PAAS 系统，应该有三个登录入口
 1. 系统管理员登录入口
-* m=sys_admin_login
-* 入参：用户名，口令
+* paas_sys.php?m=login&a={user:___,password:___}
 2. 企业管理员登录入口
-* m=enterprise_admin_login
-* 入参：企业符号名，用户名，口令
+* paas_enterprise.php?m=login&a={enterprise:企业符号名,user:___,password:___}
 3. 最终用户登录入口
-* m=user_login
-* 入参：网站符号名，用户名，口令
+* paas_web.php?m=login&a={enterprise:企业符号名,user:___,password:___}
+* 此处跟商业模式有关，可能的模式有两类，一类是在餐厅点餐模式：用户直接登录本餐厅，进行点餐等活动。一类是外卖模式：用户可以查看所有企业的商店，进行点餐等活动。
 4. 出参：{ "err":0, "err_msg":"", "user_info":{}, "user_privilege":['resource_privilege', 'privileges'] }
 
 ## 系统管理员
@@ -196,8 +181,6 @@ PAAS 系统，应该有三个登录入口
 企业管理员存储在表：enterprise_admin。
 企业管理员登录帐号必须全局唯一
 
-## 最终用户归属
-用户只能属于某个 web 站点，所以，每个 web 站点需要有一套：user_'网站的 id_website' 和 ac_user_rule_'网站的 id_website' 表。
 
 
 # API
