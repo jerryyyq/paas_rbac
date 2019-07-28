@@ -1,5 +1,9 @@
 <?php
-//require_once('./yyq_frame.php');
+// 导出数据库：
+// cd ~/work/paas_rbac/server
+// mysqldump -u root -p paas_rbac > paas_rbac_20190728.sql;
+//
+// require_once('./yyq_frame.php');
 require 'vendor/autoload.php';
 
 define( 'CREATE_USER_TABLE', "CREATE TABLE `user_%s` (

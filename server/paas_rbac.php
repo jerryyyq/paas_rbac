@@ -207,8 +207,7 @@ function __have_resource_privilege( $user_privilege, $id_resource, $privilege_na
     foreach( $user_privilege['resource_privilege'] as $row )
     {
         if( $row['id_resource'] === $id_resource and 
-            ( $row['id_privilege'] === $privilege['id_privilege'] or $row['id_privilege'] === $privilege['id_father'] )
-        )
+            ( $row['id_privilege'] === $privilege['id_privilege'] or $row['id_privilege'] === $privilege['id_father'] ) )
         {
             return true;
         }   
