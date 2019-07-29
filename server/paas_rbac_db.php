@@ -6,44 +6,6 @@
 // require_once('./yyq_frame.php');
 require 'vendor/autoload.php';
 
-define( 'CREATE_USER_TABLE', "CREATE TABLE `user_%s` (
-  `id_user` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(45) DEFAULT NULL COMMENT '用户名',
-  `email` varchar(45) DEFAULT NULL,
-  `mobile` varchar(45) DEFAULT NULL,
-  `salt` varchar(128) DEFAULT NULL,
-  `password` varchar(512) DEFAULT NULL,
-  `real_name` varchar(128) DEFAULT NULL COMMENT '真实姓名',
-  `state` int(11) DEFAULT '0' COMMENT '用户的状态：例如是否激活、注销等等',
-  `id_channel` int(11) DEFAULT '0' COMMENT '是从哪个渠道加过来的。0 为非渠道用户。',
-  `oauth_platform_type` varchar(128) DEFAULT NULL COMMENT '第三方登录平台类型。‘’ 和 ‘0’ 表示没有第三方登录平台关联帐号；‘1’ 是微信 unionid；‘2’是微信 openid；''3''是 QQ；‘4’是新浪；',
-  `wx_unionid` varchar(128) DEFAULT NULL,
-  `wx_openid` varchar(128) DEFAULT NULL,
-  `qq_openid` varchar(128) DEFAULT NULL,
-  `sina_openid` varchar(128) DEFAULT NULL,
-  `token` varchar(512) DEFAULT NULL COMMENT '用于跨站点统一登录，无此需求可以忽略。',
-  `token_create_time` datetime DEFAULT NULL COMMENT 'token 创建时间',
-  `registe_date` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
-  `email_verify_state` int(11) DEFAULT '0' COMMENT '邮件地址校验状态。0=未校验；1=校验成功；2=已发校验码。',
-  `email_verify_code` varchar(128) DEFAULT NULL COMMENT '邮件地址校验码。',
-  `email_verify_code_send_time` datetime DEFAULT NULL COMMENT '邮件地址校验码发送时间。',
-  `mobile_verify_state` int(11) DEFAULT '0' COMMENT '手机校验状态。0=未校验；1=校验成功；2=已发校验码。',
-  `mobile_verify_code` varchar(128) DEFAULT NULL COMMENT '手机校验码。',
-  `mobile_verify_code_send_time` datetime DEFAULT NULL COMMENT '手机校验码发送时间。',
-  PRIMARY KEY (`id_user`),
-  UNIQUE KEY `email_UNIQUE` (`email`),
-  UNIQUE KEY `mobile_UNIQUE` (`mobile`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;" );
-
-define( 'CREATE_USER_RULE_TABLE', "CREATE TABLE `ac_user_rule_%s` (
-    `id` int(11) NOT NULL AUTO_INCREMENT,
-    `id_user` int(11) DEFAULT NULL,
-    `id_rule` int(11) DEFAULT NULL,
-    `description` varchar(256) DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    KEY `index2` (`id_user`,`id_rule`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;" );
-
 
 // 如果需要使用数据库，可以在这里配置
 $g_mysql = comm_create_default_mysql( 'localhost', 'paas_rbac', 'root', 'yyqet' );
@@ -53,15 +15,15 @@ $g_mysql = comm_create_default_mysql( 'localhost', 'paas_rbac', 'root', 'yyqet' 
 function db_check_user_password( $table_name, $primary_key_name, $email, $password )
 {
     global $g_mysql;
-    $sql = "SELECT {$primary_key_name},name,email,salt,password,state FROM {$table_name} WHERE email = ? OR mobile = ? LIMIT 1";
-    $bind_param = array($email, $email);
+    $sql = "SELECT id_user,name,email,salt,password,state FROM ac_user WHERE email = ? OR mobile = ? OR name = ? LIMIT 1";
+    $bind_param = array($email, $email, $email);
     $rows = $g_mysql->selectData($sql, $bind_param);
     if( !isset($rows[0]) )
         return 0;
 
     $user = $rows[0];
     if( $user['salt'] == '' && $user['password'] == '' && $password == '' )
-        return (int)$user[$primary_key_name];
+        return (int)$user['id_user'];
 
     $password_hash = comm_get_password_hash( $password, $user['salt'] );
     if( $user['password'] != $password_hash )
@@ -70,7 +32,7 @@ function db_check_user_password( $table_name, $primary_key_name, $email, $passwo
     if( intval($user['state']) != 1 )
         return -2;
 
-    return (int)$user[$primary_key_name]; 
+    return (int)$user['id_user']; 
 }
 
 function db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_openid = '', $email = '' )
