@@ -1,6 +1,8 @@
 <?php
 require_once('./paas_rbac_db.php');
 
+define( 'COOKIE_OVER_TIME', 86400 );         // session 与 cookie 过期时间：1 天过期
+
 // 如果需要设置时区，可以在这里调用
 date_default_timezone_set('Asia/Shanghai');
 
@@ -23,33 +25,51 @@ comm_set_run_config( array('sql_injecte_loose' => true) );
 session_start();
 
 
-// login_type: 0 system_admin, 1 enterprise_admin, 2 user
+//////////////////////// session 代码 ///////////////////////////
+function __session_set_user_info( $user_info, $user_privilege )
+{
+    $_SESSION['user_info'] = $user_info;
+    $_SESSION['user_privilege'] = $user_privilege;
+
+    $_SESSION['id_user'] = $user_info['id_user'];
+    setcookie('id_user', $_SESSION['id_user'], time() + COOKIE_OVER_TIME);
+}
+
+function &__session_get_user_info( $id_user = 0 )
+{
+    if( 0 < intval($id_user) and intval($_SESSION['id_user']) != intval($id_user) )
+        return array('id_user' => 0);
+
+    return $_SESSION['user_info'];
+}
+
+function __session_get_user_id( )
+{
+    return isset($_SESSION['id_user']) ? intval($_SESSION['id_user']) : 0;
+}
+
+// login_type: 1 system_admin, 2 enterprise_admin, 3 user
 function __do_login( $login_type, $email, $password )
 {
     global $g_debug, $g_mysql;
     $result = array('err' => 0, 'err_msg' => '', 'user_info' => array() );
 
-    $id_user = db_check_user_password( $table_name, $primary_key_name, $email, $password );
+    $id_user = db_check_user_password( $email, $password );
     if( 0 < $id_user )
     {
-        $user_info = db_get_user_info( $table_name, $primary_key_name, $id_user );
+        $user_info = db_get_user_info( $id_user );
         if( $g_debug )
         {
             print_r( $user_info );
         }
+        $result['user_info'] = $user_info;
+
+        // 获得权限信息
+        $result['user_privilege'] = db_get_user_resource_privilege( $result['user_info']['id_user'], $login_type );
 
         // 存入 session
-        $user_info['table_name'] = $table_name;
-        $user_info['primary_key_name'] = $primary_key_name;
-        $user_info['type'] = 2;
-        if( 'sys_admin' === $table_name )
-            $user_info['type'] = 0;
-        else if( 'enterprise_admin' === $table_name )
-            $user_info['type'] = 1;
-
-        session_set_user_info( $user_info );
-
-        $result['user_info'] = $user_info;
+        $_SESSION['login_type'] = $login_type;
+        __session_set_user_info( $user_info, $result['user_privilege'] );
     }
     else if( 0 === $id_user )
     {
@@ -70,21 +90,29 @@ function __do_login( $login_type, $email, $password )
     return $result;    
 }
 
-function __have_privilege( $user_privilege, $privilege_name )
+function __have_privilege( $user_privilege, $privilege_name, $id_resource = 0 )
 {
-    foreach( $user_privilege['privileges'] as $key => $row )
+    foreach( $user_privilege as $key => $row )
     {
-        if( $row['name'] === $privilege_name )
-            return (int)$key;
+        if( $row['name'] === $privilege_name && (0 === $id_resource || $row['id_resource'] === $id_resource) )
+        {
+            if( $g_debug )
+            {
+                echo 'privilege: ';
+                print_r($row);
+            }
+
+            return $row;
+        }
     }
 
-    return -1;
+    return array('id_privilege' => 0);
 }
 // 检查当前用户是否有某个权限
 function __have_privilege_ex( $privilege_name )
 {
-    $key = __have_privilege($_SESSION['user_privilege'], $privilege_name);
-    if( 0 > $key )
+    $privilege = __have_privilege($_SESSION['user_privilege'], $privilege_name);
+    if( 1 > $privilege['id_privilege'] )
         return false;
     else
         return true;
@@ -93,27 +121,12 @@ function __have_privilege_ex( $privilege_name )
 function __have_resource_privilege( $user_privilege, $id_resource, $privilege_name )
 {
     global $g_debug;
-    $key = __have_privilege( $user_privilege, $privilege_name );
-    if( 0 > $key )
+    $privilege = __have_privilege( $user_privilege, $privilege_name, $id_resource );
+
+    if( 1 > $privilege['id_privilege'] )
         return false;
 
-    $privilege = $user_privilege['privileges'][$key];
-    if( $g_debug )
-    {
-        echo 'privilege: ';
-        print_r($privilege);
-    }
-
-    foreach( $user_privilege['resource_privilege'] as $row )
-    {
-        if( $row['id_resource'] === $id_resource and 
-            ( $row['id_privilege'] === $privilege['id_privilege'] or $row['id_privilege'] === $privilege['id_father'] ) )
-        {
-            return true;
-        }   
-    }
-
-    return false;
+    return true;
 }
 
 // 检查当前用户是否有某个资源的权限

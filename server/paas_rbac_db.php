@@ -12,7 +12,7 @@ $g_mysql = comm_create_default_mysql( 'localhost', 'paas_rbac', 'root', 'yyqet' 
 
 
 // 返回值：0 == 用户不存在；大于 0 == 用户 id；-1 == 口令错误；-2 == 帐号未激活
-function db_check_user_password( $table_name, $primary_key_name, $email, $password )
+function db_check_user_password( $email, $password )
 {
     global $g_mysql;
     $sql = "SELECT id_user,name,email,salt,password,state FROM ac_user WHERE email = ? OR mobile = ? OR name = ? LIMIT 1";
@@ -35,7 +35,7 @@ function db_check_user_password( $table_name, $primary_key_name, $email, $passwo
     return (int)$user['id_user']; 
 }
 
-function db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_openid = '', $email = '' )
+function db_get_user_all_info( $id_user, $wx_openid = '', $email = '' )
 {
     global $g_mysql;
 
@@ -43,7 +43,7 @@ function db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_ope
     $bind_param = array();
     if( 0 < intval($id_user) )
     {
-        $fields[0] = $primary_key_name;
+        $fields[0] = 'id_user';
         $bind_param[0] = $id_user;
     }
     else if( 0 < strlen($wx_openid) )
@@ -57,31 +57,35 @@ function db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_ope
         $bind_param[0] = $email;
     }    
 
-    $rows = $g_mysql->selectDataEx($table_name, $fields, $bind_param);
+    $rows = $g_mysql->selectDataEx('ac_user', $fields, $bind_param);
     if( !isset($rows[0]) )
         return array($primary_key_name => 0);
 
     return $rows[0];
 }
 
-function db_get_user_info( $table_name, $primary_key_name, $id_user, $wx_openid = '', $email = '' )
+function db_get_user_info( $id_user, $wx_openid = '', $email = '' )
 {
-    $user_info = db_get_user_all_info( $table_name, $primary_key_name, $id_user, $wx_openid, $email);
+    $user_info = db_get_user_all_info( $id_user, $wx_openid, $email);
     unset( $user_info['salt'] );
     unset( $user_info['password'] );
 
     return $user_info;
 }
 
-function db_set_user_password( $table_name, $primary_key_name, $id_user, $salt, $password )
+function db_set_user_password( $id_user, $salt, $password )
 {
-    return db_update_data( $table_name, array('salt', 'password'), 
-        $primary_key_name . '= ?', array($salt, $password, $id_user) );
+    global $g_mysql;
+
+    return $g_mysql->updateData( 'ac_user', array('salt', 'password'), array($salt, $password), 
+        'id_user = ?', array($id_user) );
 }
 
 // 查看是否有其他用户存在同样的值
 function db_get_other_object_info( $table_name, $field_name, $field_value, $primary_key_name, $self_primary_key_value )
 {
+    global $g_mysql;
+
     $sql = "SELECT * FROM {$table_name} WHERE {$field_name} = ? AND {$primary_key_name} != ?";
     $rows = db_select_data( $sql, array($field_value, $self_primary_key_value) );
     if( !isset($rows[0]) )
@@ -92,52 +96,75 @@ function db_get_other_object_info( $table_name, $field_name, $field_value, $prim
     return $rows[0];    
 }
 
-function db_get_some_table_info( $table_name, $field_name, $field_value, $primary_key_name, $primary_key_value = 0 )
-{
-    $sql = "SELECT * FROM {$table_name} WHERE {$field_name} = ? LIMIT 1";
-    $bind_param = array( $field_value );
-    if( 1 > strlen($field_value) )
-    {
-        $sql = "SELECT * FROM {$table_name} WHERE {$primary_key_name} = ? LIMIT 1";
-        $bind_param = array( $primary_key_value );
-    }
-
-    $rows = db_select_data($sql, $bind_param);
-    if( !isset($rows[0]) )
-        return array( $primary_key_name => 0 );
-
-    return $rows[0];
-}
-
-function db_delete_rule( $id_rule )
-{
-    $sql = "DELETE A.*, B.* FROM ac_rule AS A, ac_rule_resource_privilege AS B
-         WHERE B.id_rule = A.id_rule AND A.id_rule = ?";
-    $stmt = NULL;
-    return db_execute_sql($stmt, $sql, array( $id_rule ) );
-}
-
-function db_get_user_resource_privilege( $table_name, $primary_key_name, $id_user )
+function db_get_count( $table_name, $where, $whereValues = array() )
 {
     global $g_mysql;
-    $sql = "SELECT C.* FROM ac_rule_resource_privilege AS C, {$table_name} AS D 
-            WHERE C.id_rule = D.id_rule AND D.{$primary_key_name} = ?";
-    
-    $bind_param = array( $id_user );
-
-    $rows = $g_mysql->$g_mysql($sql, $bind_param);
-
-    $user_privilege['resource_privilege'] = $rows;
-
-    $privilege = [];
-    foreach( $rows as $row )
+    $sql = "SELECT COUNT(*) AS count FROM {$table_name} WHERE {$where}";
+    $rows = $g_mysql->selectData( $sql, $whereValues ); 
+    if( !isset($rows[0]) )
     {
-        $privilege[] = $row['id_privilege'];
+        comm_get_default_log()->logError( "db_get_count: {$table_name}, {$where} return NULL!" );
+        return 0;
     }
 
-    $user_privilege['privileges'] = db_expand_all_privilege( $privilege );
+    $count = $rows[0]['count'];
+    return intval($count); 
+}
 
-    return $user_privilege;
+// resource_type: 0 all, 1 system_admin, 2 enterprise_admin, 3 user
+function db_get_user_resource_privilege( $id_user, $resource_type = 0 )
+{
+    global $g_mysql;
+    $sql = "SELECT A.resource_type, A.id_resource, B.id_privilege FROM ac_user_resource_rule AS A, ac_rule_privilege AS B 
+            WHERE A.id_rule = B.id_rule AND A.id_user = ?";
+
+    if( $resource_type > 0 )
+        $sql = $sql . " AND A.resource_type = {$resource_type}";
+
+    $bind_param = array( $id_user );
+
+    $rows = $g_mysql->selectData($sql, $bind_param);
+
+    $result = [];
+    foreach( $rows as $row )
+    {
+        $one_privileges = db_expand_one_privilege($row['resource_type'], $row['id_resource'], $row['id_privilege'], true);
+        array_push($result, ...$one_privileges);
+    }
+
+    return $result;
+}
+
+// 展开权限：递归查找一个权限及其下的所有子孙权限。
+// 入参为：id_privilege
+// 返回值为：ac_privilege 表的多条记录
+function db_expand_one_privilege( $resource_type, $id_resource, $id_privilege, $include_self = false )
+{
+    global $g_mysql;
+    $result = [];
+
+    $sql = "SELECT resource_type = {$resource_type}, id_resource = {$id_resource}, * FROM ac_privilege WHERE id_father = ?";
+    $bindParam = array($id_privilege);
+
+    if( $include_self )
+    {
+        $sql = "SELECT resource_type = {$resource_type}, id_resource = {$id_resource}, * FROM ac_privilege WHERE id_privilege = ? OR id_father = ?";
+        $bindParam = array($id_privilege, $id_privilege);
+    }
+
+    $privileges = $g_mysql->selectData($sql, $bindParam);
+    array_push($result, ...$privileges);
+
+    foreach( $privileges as $privilege )
+    {    
+        if( $privilege['id_privilege'] == $id_privilege || 0 == intval($privilege['have_child']) )
+            continue;
+
+        $result_child = db_expand_one_privilege( $privilege['id_privilege'] );
+        array_push($result, ...$result_child);
+    }
+
+    return $result;
 }
 
 // 展开权限：添加所有的子权限。只做一级子权限查找，不会递归查找孙权限。
@@ -151,11 +178,20 @@ function db_expand_all_privilege( $privilege )
     return db_select_data($sql);
 }
 
-function db_add_admin_operation_log( $id_admin, $id_enterprise, $action, $target_id, $target_type, $description )
+function db_add_sys_operation_log( $id_user, $action, $target_id, $target_type, $description )
 {
-    return db_insert_data( 'admin_operation_log', 
-        array('id_admin', 'id_enterprise', 'action', 'target_id', 'target_type', 'description'),
-        array($id_admin, $id_enterprise, $action, $target_id, $target_type, $description) );
+    global $g_mysql;
+    return $g_mysql->insertData( 'ac_sys_operation_log', 
+        array('id_user', 'action', 'target_id', 'target_type', 'description'),
+        array($id_user, $action, $target_id, $target_type, $description) );
+}
+
+function db_add_enterprise_operation_log( $id_enterprise, $id_user, $action, $target_id, $target_type, $description )
+{
+    global $g_mysql;
+    return $g_mysql->insertData( 'ac_enterprise_operation_log', 
+        array('id_enterprise', 'id_user', 'action', 'target_id', 'target_type', 'description'),
+        array($id_enterprise, $id_user, $action, $target_id, $target_type, $description) );
 }
 
 function db_create_website_user_tables( $id_website )

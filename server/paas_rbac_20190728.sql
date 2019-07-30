@@ -113,7 +113,7 @@ DROP TABLE IF EXISTS `ac_rule`;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `ac_rule` (
   `id_rule` int(11) NOT NULL AUTO_INCREMENT,
-  `resource_type` int(11) DEFAULT NULL COMMENT '0:sys, 1:enteprise, 2:websit',
+  `resource_type` int(11) DEFAULT NULL COMMENT '1:sys, 2:enteprise, 3:websit',
   `name` varchar(128) DEFAULT NULL,
   `show_name` varchar(128) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
@@ -272,8 +272,8 @@ CREATE TABLE `ac_user_resource_rule` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_user` int(11) DEFAULT NULL,
   `id_rule` int(11) DEFAULT NULL,
-  `resource_type` int(11) NOT NULL COMMENT '0:sys, 1:enteprise, 2:websit',
-  `id_resource` int(11) DEFAULT NULL COMMENT '0:sys, 1:enteprise, 2:websit',
+  `resource_type` int(11) NOT NULL COMMENT '1:sys, 2:enteprise, 3:websit',
+  `id_resource` int(11) DEFAULT NULL,
   `description` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `index2` (`id_user`,`id_rule`)
