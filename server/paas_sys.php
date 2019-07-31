@@ -27,6 +27,9 @@ $route_functions = array(
     'rule_info_get',
     'rule_add',
     'rule_delete',
+    'rule_privilege_info_get',
+    'rule_privilege_add',
+    'rule_privilege_delete',
 );
 
 // 调用主路由函数
@@ -157,6 +160,15 @@ function privilege_delete( $args )
     if( 1 > int($privilege_info['id_privilege']) )
         return $result;
 
+    // 检查该 privilege 是否被引用
+    $count = $g_mysql->getCount( 'ac_rule_privilege', 'id_privilege = ?', array($privilege_info['id_privilege']) );
+    if( 0 < $count )
+    {
+        $result['err'] = -104;
+        $result['err_msg'] = "{$args['name']} 还在被引用，不能删除";
+        return $result;       
+    }
+
     // 获得本权限及其所有子孙权限
     $one_privileges = db_expand_one_privilege(0, 0, $privilege_info['id_privilege'], true);
     $id_privilege_str = "";
@@ -236,7 +248,7 @@ function rule_delete( $args )
         return $result;
 
     // 检查该 rule 是否被引用
-    $count = db_get_count( 'ac_user_resource_rule', 'id_rule = ?', array($rule_info['id_rule']) );
+    $count = $g_mysql->getCount( 'ac_user_resource_rule', 'id_rule = ?', array($rule_info['id_rule']) );
     if( 0 < $count )
     {
         $result['err'] = -104;
@@ -255,6 +267,85 @@ function rule_delete( $args )
     db_add_sys_operation_log( $_SESSION['id_user'], 'rule_delete', $rule_info['id_rule'], 111, '删除角色：' . $args['name'] );
     return $result;    
 }
+
+function rule_privilege_info_get( $args )
+{
+    global $g_mysql;
+    $result = comm_check_parameters( $args, array('id') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['rule_privilege_info'] = $g_mysql->selectDataEx( 'ac_rule_privilege', array('id'), array($args['id']) )[0];
+    return $result;
+}
+
+function rule_privilege_add( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array('id_rule', 'id_privilege'), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $rule_info = $g_mysql->selectDataEx( 'ac_rule', array('id_rule'), array($args['id_rule']) )[0];
+    if( 1 > int($rule_info['id_rule']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_rule 不存在，请检查';
+        return $result;
+    }
+
+    $privilege_info = $g_mysql->selectDataEx( 'ac_privilege', 'id_privilege', $args['id_privilege'] )[0];
+    if( 1 > int($privilege_info['id_privilege']) )    
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_privilege 不存在，请检查';
+        return $result;
+    }
+
+    // 如果已存在则直接返回
+    $rule_privilege_info = $g_mysql->selectDataEx( 'ac_rule_privilege', 
+        array('id_rule', 'id_privilege'), 
+        array($args['id_rule'], $args['id_privilege']) )[0];
+    if( 0 < $rule_privilege_info['id'] )
+    {
+        $result['id'] = $rule_privilege_info['id'];
+        return $result;
+    }
+
+    // 插入数据
+    $result['id'] = $g_mysql->insertDataEx( 'ac_rule_privilege', $args, 'id' );
+    
+    // 添加操作日志
+    db_add_sys_operation_log( $_SESSION['id_user'], 'rule_privilege_add', $result['id'], 120, 
+        '添加角色权限：id_rule = ' . $args['id_rule'] . ' id_privilege = ' . $args['id_privilege'] );
+    return $result;
+}
+
+function rule_privilege_delete( $args )
+{
+    $result = __check_parameters_and_privilege( $args, array('id'), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 不存在，直接返回成功
+    $rule_privilege_info = $g_mysql->selectDataEx( 'ac_rule_privilege', 'id', $args['id'] )[0];
+    if( 1 > int($rule_privilege_info['id']) )
+        return $result;
+
+    if( !$g_mysql->deleteData( 'ac_rule_privilege', 'id=?', array($args['id']) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 添加操作日志
+    db_add_sys_operation_log( $_SESSION['id_user'], 'rule_privilege_delete', $args['id'], 121, 
+        '删除角色权限：id_rule = ' . $rule_privilege_info['id_rule'] . ' id_privilege = ' . $rule_privilege_info['id_privilege']  );
+    return $result;
+}
+
+
 
 
 

@@ -96,21 +96,6 @@ function db_get_other_object_info( $table_name, $field_name, $field_value, $prim
     return $rows[0];    
 }
 
-function db_get_count( $table_name, $where, $whereValues = array() )
-{
-    global $g_mysql;
-    $sql = "SELECT COUNT(*) AS count FROM {$table_name} WHERE {$where}";
-    $rows = $g_mysql->selectData( $sql, $whereValues ); 
-    if( !isset($rows[0]) )
-    {
-        comm_get_default_log()->logError( "db_get_count: {$table_name}, {$where} return NULL!" );
-        return 0;
-    }
-
-    $count = $rows[0]['count'];
-    return intval($count); 
-}
-
 // resource_type: 0 all, 1 system_admin, 2 enterprise_admin, 3 user
 function db_get_user_resource_privilege( $id_user, $resource_type = 0 )
 {
