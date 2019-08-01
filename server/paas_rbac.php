@@ -394,7 +394,6 @@ function change_password( $args )
     {
         $result['err'] = -10;
         $result['err_msg'] = '操作失败';
-
     }
     
     return $result;    

@@ -136,9 +136,9 @@ PAAS 系统，应该有三个登录入口
 1. 系统管理员登录入口
 * paas_sys.php?m=login&a={user:xxxx,password:xxxx}
 2. 企业管理员登录入口
-* paas_enterprise.php?m=login&a={enterprise:企业符号名,user:xxxx,password:xxxx}
+* paas_enterprise.php?m=login&a={symbol_name:企业符号名,user:xxxx,password:xxxx}
 3. 最终用户登录入口
-* paas_web.php?m=login&a={enterprise:网站符号名,user:xxxx,password:xxxx}
+* paas_web.php?m=login&a={symbol_name:网站符号名,user:xxxx,password:xxxx}
 * 此处跟商业模式有关，可能的模式有两类，一类是在餐厅点餐模式：用户直接登录本餐厅，进行点餐等活动。一类是外卖模式：用户可以查看所有企业的商店，进行点餐等活动。
 4. 出参：{ "err":0, "err_msg":"", "user_info":{}, "user_privilege":['resource_privilege', 'privileges'] }
 

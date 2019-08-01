@@ -54,7 +54,6 @@ $route_functions = array(
 comm_frame_main( $route_functions );
 
 ////////////////////////////////////////// 路由接口函数实现 /////////////////////////////////////////////////
-//////// 当前用户登录及权限检查 ////////
 
 function test( $args )
 {
@@ -62,6 +61,8 @@ function test( $args )
     $result['args'] = $args;
     return $result;
 }
+
+//////// 当前用户登录及权限检查 ////////
 
 function login( $args )
 {
