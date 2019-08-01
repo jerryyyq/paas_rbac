@@ -51,7 +51,7 @@ function __session_get_user_id( )
 // login_type: 1 system_admin, 2 enterprise_admin, 3 user
 function __do_login( $login_type, $email, $password )
 {
-    global $g_debug, $g_mysql;
+    global $g_debug;
     $result = array('err' => 0, 'err_msg' => '', 'user_info' => array() );
 
     $id_user = db_check_user_password( $email, $password );
@@ -94,12 +94,11 @@ function __have_privilege( $user_privilege, $privilege_name, $id_resource = 0 )
 {
     foreach( $user_privilege as $key => $row )
     {
-        if( $row['name'] === $privilege_name && (0 === $id_resource || $row['id_resource'] === $id_resource) )
+        if( $row['name'] === $privilege_name && (0 === $id_resource || 0 === intval($row['id_resource']) || $row['id_resource'] === $id_resource) )
         {
             if( $g_debug )
             {
-                echo 'privilege: ';
-                print_r($row);
+                echo 'privilege: ' . json_encode($row);
             }
 
             return $row;
@@ -151,30 +150,54 @@ function __check_parameters_and_privilege( $args, $mast_exist_parameters, $privi
     return $result;
 }
 
-// 修改用户信息，会自动过滤掉 salt, password
-function __modify_user_info( $table_name, $primary_key_name, $user_info )
+function __check_parameters_and_resource_privilege( $args, $mast_exist_parameters, $id_resource, $privilege_name )
 {
-    $result = array('err' => 0, 'err_msg' => '', 'user_info' => array() );
-    $other_user_info = db_get_other_object_info( 'sys_admin', 'email', $user_info['email'], 'id_admin', $user_info['id_admin'] );
-    if( 0 < int($other_user_info['id_admin']) )
-    {
-        $result['err'] = -102;
-        $result['err_msg'] = 'email 已存在，请换一个';
+    $result = comm_check_parameters( $args, $mast_exist_parameters );
+    if( 0 != $result['err'] )
         return $result;
+
+    // 检查当前管理员是否有权限
+    if( !__have_resource_privilege_ex( $id_resource, $privilege_name ) )
+    {
+        $result['err'] = -2;
+        $result['err_msg'] = '没有相应权限';
+    }
+    
+    return $result;
+}
+
+// 修改用户信息，会自动过滤掉 salt, password
+function __modify_user_info( $user_info )
+{
+    global $g_mysql;
+    $result = array('err' => 0, 'err_msg' => '', 'user_info' => array() );
+
+    if( isset($user_info['email']) )
+    {
+        $other_user_info = db_get_other_object_info( 'ac_user', 'email', $user_info['email'], 'id_user', $user_info['id_user'] );
+        if( 0 < int($other_user_info['id_user']) )
+        {
+            $result['err'] = -102;
+            $result['err_msg'] = 'email 已存在，请换一个';
+            return $result;
+        }
     }
 
-    $other_user_info = db_get_other_object_info( 'sys_admin', 'mobile', $user_info['mobile'], 'id_admin', $user_info['id_admin'] );
-    if( 0 < int($other_user_info['id_admin']) )
+    if( isset($user_info['mobile']) )
     {
-        $result['err'] = -102;
-        $result['err_msg'] = 'mobile 已存在，请换一个';
-        return $result;
+        $other_user_info = db_get_other_object_info( 'ac_user', 'mobile', $user_info['mobile'], 'id_user', $user_info['id_user'] );
+        if( 0 < int($other_user_info['id_user']) )
+        {
+            $result['err'] = -102;
+            $result['err_msg'] = 'mobile 已存在，请换一个';
+            return $result;
+        }
     }
 
     unset( $user_info['salt'] );
     unset( $user_info['password'] );
 
-    if( !db_update_data_ex( 'sys_admin', $user_info, 'id_admin' ) )
+    if( !$g_mysql->updateDataEx( 'ac_user', $user_info, 'id_user' ) )
     {
         $result['err'] = -103;
         $result['err_msg'] = '操作失败';

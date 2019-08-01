@@ -59,7 +59,7 @@ function db_get_user_all_info( $id_user, $wx_openid = '', $email = '' )
 
     $rows = $g_mysql->selectDataEx('ac_user', $fields, $bind_param);
     if( !isset($rows[0]) )
-        return array($primary_key_name => 0);
+        return array('id_user' => 0);
 
     return $rows[0];
 }
@@ -87,7 +87,7 @@ function db_get_other_object_info( $table_name, $field_name, $field_value, $prim
     global $g_mysql;
 
     $sql = "SELECT * FROM {$table_name} WHERE {$field_name} = ? AND {$primary_key_name} != ?";
-    $rows = db_select_data( $sql, array($field_value, $self_primary_key_value) );
+    $rows = $g_mysql->selectData( $sql, array($field_value, $self_primary_key_value) );
     if( !isset($rows[0]) )
         return array($primary_key_name => 0);
 

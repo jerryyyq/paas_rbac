@@ -21,15 +21,33 @@ $route_functions = array(
     'have_privilege',
     'have_resource_privilege',
 
+    'privilege_all_get',
     'privilege_info_get',
     'privilege_add',
     'privilege_delete',
+    'rule_all_get',
     'rule_info_get',
     'rule_add',
     'rule_delete',
+    'rule_privilege_all_get',
     'rule_privilege_info_get',
     'rule_privilege_add',
     'rule_privilege_delete',
+    'user_resource_rule_all_get',
+    'user_resource_rule_info_get',
+    'user_resource_rule_add',
+    'user_resource_rule_delete',
+
+    'user_info_get',
+    'user_add',
+    'user_delete',
+    'user_modify',
+
+    'enterprise_symbol_name_exist',
+    'enterprise_info_get',
+    'enterprise_add',
+    'enterprise_delete',
+    'enterprise_modify',
 );
 
 // 调用主路由函数
@@ -114,6 +132,17 @@ function have_resource_privilege( $args )
 
 
 //////// 数据库表操作 ////////
+function privilege_all_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array(), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['privilege_list'] = $g_mysql->selectDataEx( 'ac_privilege' );
+    return $result;
+}
+
 function privilege_info_get( $args )
 {
     global $g_mysql;
@@ -122,7 +151,7 @@ function privilege_info_get( $args )
         return $result;
 
     //$result['privilege_info'] = db_get_some_table_info( 'ac_privilege', 'name', $args['name'], 'id_privilege' );
-    $result['privilege_info'] = $g_mysql->selectDataEx( 'ac_privilege', array('name'), array($args['name']) )[0];
+    $result['privilege_info'] = $g_mysql->selectOne( 'ac_privilege', array('name'), array($args['name']) );
     return $result;
 }
 
@@ -133,8 +162,8 @@ function privilege_add( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    $privilege_info = $g_mysql->selectDataEx( 'ac_privilege', array('name'), array($args['name']) )[0];
-    if( 0 < int($privilege_info['id_privilege']) )
+    $privilege_info = $g_mysql->selectOne( 'ac_privilege', array('name'), array($args['name']) );
+    if( 0 < count($privilege_info) )
     {
         $result['err'] = -102;
         $result['err_msg'] = 'name 已存在，请换一个';
@@ -156,8 +185,8 @@ function privilege_delete( $args )
         return $result;
 
     // 不存在，直接返回成功
-    $privilege_info = $g_mysql->selectDataEx( 'ac_privilege', array('name'), array($args['name']) )[0];
-    if( 1 > int($privilege_info['id_privilege']) )
+    $privilege_info = $g_mysql->selectOne( 'ac_privilege', array('name'), array($args['name']) );
+    if( 1 > count($privilege_info) )
         return $result;
 
     // 检查该 privilege 是否被引用
@@ -202,6 +231,17 @@ function privilege_delete( $args )
     return $result;
 }
 
+function rule_all_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array(), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['rule_list'] = $g_mysql->selectDataEx( 'ac_rule' );
+    return $result;
+}
+
 function rule_info_get( $args )
 {
     global $g_mysql;
@@ -209,7 +249,7 @@ function rule_info_get( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    $result['rule_info'] = $g_mysql->selectDataEx( 'ac_rule', array('name'), array($args['name']) )[0];
+    $result['rule_info'] = $g_mysql->selectOne( 'ac_rule', array('name'), array($args['name']) );
     return $result;
 }
 
@@ -220,8 +260,8 @@ function rule_add( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    $rule_info = $g_mysql->selectDataEx( 'ac_rule', array('name'), array($args['name']) )[0];
-    if( 0 < int($rule_info['id_rule']) )
+    $rule_info = $g_mysql->selectOne( 'ac_rule', array('name'), array($args['name']) );
+    if( 0 < count($rule_info) )
     {
         $result['err'] = -102;
         $result['err_msg'] = 'name 已存在，请换一个';
@@ -243,8 +283,8 @@ function rule_delete( $args )
         return $result;
     
     // 不存在，直接返回成功
-    $rule_info = $g_mysql->selectDataEx( 'ac_rule', array('name'), array($args['name']) )[0];
-    if( 1 > int($rule_info['id_rule']) )
+    $rule_info = $g_mysql->selectOne( 'ac_rule', array('name'), array($args['name']) );
+    if( 1 > count($rule_info) )
         return $result;
 
     // 检查该 rule 是否被引用
@@ -268,6 +308,17 @@ function rule_delete( $args )
     return $result;    
 }
 
+function rule_privilege_all_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array(), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['rule_privilege_list'] = $g_mysql->selectDataEx( 'ac_rule_privilege' );
+    return $result;
+}
+
 function rule_privilege_info_get( $args )
 {
     global $g_mysql;
@@ -275,7 +326,7 @@ function rule_privilege_info_get( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    $result['rule_privilege_info'] = $g_mysql->selectDataEx( 'ac_rule_privilege', array('id'), array($args['id']) )[0];
+    $result['rule_privilege_info'] = $g_mysql->selectOne( 'ac_rule_privilege', array('id'), array($args['id']) );
     return $result;
 }
 
@@ -286,16 +337,16 @@ function rule_privilege_add( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    $rule_info = $g_mysql->selectDataEx( 'ac_rule', array('id_rule'), array($args['id_rule']) )[0];
-    if( 1 > int($rule_info['id_rule']) )
+    $rule_info = $g_mysql->selectOne( 'ac_rule', array('id_rule'), array($args['id_rule']) );
+    if( 1 > count($rule_info) )
     {
         $result['err'] = -102;
         $result['err_msg'] = 'id_rule 不存在，请检查';
         return $result;
     }
 
-    $privilege_info = $g_mysql->selectDataEx( 'ac_privilege', 'id_privilege', $args['id_privilege'] )[0];
-    if( 1 > int($privilege_info['id_privilege']) )    
+    $privilege_info = $g_mysql->selectOne( 'ac_privilege', 'id_privilege', $args['id_privilege'] );
+    if( 1 > count($privilege_info) )    
     {
         $result['err'] = -102;
         $result['err_msg'] = 'id_privilege 不存在，请检查';
@@ -303,10 +354,10 @@ function rule_privilege_add( $args )
     }
 
     // 如果已存在则直接返回
-    $rule_privilege_info = $g_mysql->selectDataEx( 'ac_rule_privilege', 
+    $rule_privilege_info = $g_mysql->selectOne( 'ac_rule_privilege', 
         array('id_rule', 'id_privilege'), 
-        array($args['id_rule'], $args['id_privilege']) )[0];
-    if( 0 < $rule_privilege_info['id'] )
+        array($args['id_rule'], $args['id_privilege']) );
+    if( 0 < count($rule_privilege_info) )
     {
         $result['id'] = $rule_privilege_info['id'];
         return $result;
@@ -328,8 +379,8 @@ function rule_privilege_delete( $args )
         return $result;
 
     // 不存在，直接返回成功
-    $rule_privilege_info = $g_mysql->selectDataEx( 'ac_rule_privilege', 'id', $args['id'] )[0];
-    if( 1 > int($rule_privilege_info['id']) )
+    $rule_privilege_info = $g_mysql->selectOne( 'ac_rule_privilege', 'id', $args['id'] );
+    if( 1 > count($rule_privilege_info) )
         return $result;
 
     if( !$g_mysql->deleteData( 'ac_rule_privilege', 'id=?', array($args['id']) ) )
@@ -345,8 +396,315 @@ function rule_privilege_delete( $args )
     return $result;
 }
 
+function user_resource_rule_all_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array(), 'user_rule' );
+    if( 0 != $result['err'] )
+        return $result;
+    
+    if(isset($args['id_user']))
+        $result['user_resource_rule_list'] = $g_mysql->selectDataEx( 'ac_user_resource_rule', array('id_user'), array($args['id_user']) );
+    else
+        $result['user_resource_rule_list'] = $g_mysql->selectDataEx( 'ac_user_resource_rule' );
+    return $result;
+}
 
+function user_resource_rule_info_get( $args )
+{
+    global $g_mysql;
+    $result = comm_check_parameters( $args, array('id') );
+    if( 0 != $result['err'] )
+        return $result;
+    
+    $result['user_resource_rule_info'] = $g_mysql->selectOne( 'ac_user_resource_rule', array('id'), array($args['id']) );
+    return $result;
+}
 
+function user_resource_rule_add( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array('id_user', 'id_rule', 'resource_type', 'id_resource'), 'user_rule' );
+    if( 0 != $result['err'] )
+        return $result;
 
+    // 如果已存在则直接返回
+    $user_rule_info = $g_mysql->selectOne( 'ac_user_resource_rule',
+        array('id_user', 'id_rule', 'resource_type', 'id_resource'),
+        array($args['id_user'], $args['id_rule'], $args['resource_type'], $args['id_resource']) );
+    if( 0 < $user_rule_info['id'] )
+    {
+        $result['id'] = $user_rule_info['id'];
+        return $result;
+    }
+
+    $user_info = $g_mysql->selectOne( 'ac_user', array('id_user'), array($args['id_user']) );
+    if( 1 > count($user_info) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_user 不存在，请检查';
+        return $result;
+    }
+
+    $rule_info = $g_mysql->selectOne( 'ac_rule', array('id_rule'), array($args['id_rule']) );
+    if( 1 > count($rule_info) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_rule 不存在，请检查';
+        return $result;
+    }
+
+    // 资源是否存在
+    if( 1 < intval($args['resource_type']) )
+    {
+        $table_name = 'ac_enterprise';
+        $primary_key_name = 'id_enterprise';
+        if( 2 === intval($args['resource_type']) )
+        {
+            $table_name = 'ac_website';
+            $primary_key_name = 'id_website';
+        }
+
+        $resource_info = $g_mysql->selectOne( $table_name, array($primary_key_name), array($args['id_resource']) );
+        if( 1 > count($resource_info) )
+        {
+            $result['err'] = -102;
+            $result['err_msg'] = 'id_resource 不存在，请检查';
+            return $result;
+        }
+    }
+
+    // 插入数据
+    $result['id'] = $g_mysql->insertDataEx( 'ac_user_resource_rule', $args, 'id' );
+    
+    // 添加操作日志
+    db_add_sys_operation_log( $_SESSION['id_user'], 'user_resource_rule_add', 
+        $result['id'], 150, '添加用户角色：' . json_encode($args) );
+    return $result;
+}
+
+function user_resource_rule_delete( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array('id'), 'user_rule' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 不存在，直接返回成功
+    $user_rule_info = $g_mysql->selectOne( 'ac_user_resource_rule', array('id'), array($args['id']) );
+    if( 1 > count($user_rule_info) )
+        return $result;
+
+    if( !$g_mysql->deleteData( 'ac_user_resource_rule', 'id=?', array($args['id']) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 添加操作日志
+    db_add_sys_operation_log( $_SESSION['id_user'], 'user_rule_delete', 
+        $args['id'], 151, '删除用户角色：' . json_encode($args) );
+    return $result;
+}
+
+function user_info_get( $args )
+{
+    $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array('id_user'), 'user_read' );
+    if( 0 != $result['err'] )
+        return $result;
+    
+    $result['user_info'] = $g_mysql->selectOne( 'ac_user', array('id_user'), array($args['id_user']) );
+    return $result;
+}
+
+function user_add( $args )
+{
+    $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array('name', 'email', 'mobile', 'password'), 'user_add' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $user_info = db_get_user_info( 0, '', $args['email'] );
+    if( 0 < int($user_info['id_user']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'email 已存在，请换一个';
+        return $result;
+    }
+
+    // 计算 password
+    $args['salt'] = '';
+    $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
+
+    // 加入数据库
+    $args['state'] = 1;
+    $args['email_verify_state'] = 1;
+    $args['mobile_verify_state'] = 1;
+    $args['wx_unionid'] = '';
+    $args['wx_openid'] = '';
+    $result['id_user'] = $g_mysql->insertDataEx( $table_name, $args, 'id_user' );
+
+    // 添加操作日志
+    db_add_sys_operation_log( $_SESSION['id_user'], 'user_add', 
+        $result['id_user'], 220, '添加用户：email = ' . $args['email'] );
+
+    return $result;
+}
+
+function user_delete( $args )
+{
+    $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array('id_user'), 'user_delete' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 不存在，直接返回成功
+    $user_info = db_get_user_info( $args['id_user'] );
+    if( 1 > int($user_info['id_user']) )
+        return $result;
+
+    if( !$g_mysql->deleteData( 'ac_user', 'id_user=?', array($args['id_user']) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 删除 ac_user_resource_rule
+    if( !$g_mysql->deleteData( 'ac_user_resource_rule', 'id_user=?', array($args['id_user']) ) )
+    {
+        comm_get_default_log()->logError( 'delete ac_user_resource_rule Fail! id_user = ' . $args['id_user'] );
+    }
+
+    // 添加操作日志
+    db_add_sys_operation_log( $_SESSION['id_user'], 'user_delete', 
+        $args['id_user'], 221, '删除用户： email = ' . $user_info['email'] );
+    return $result;
+}
+
+function user_modify( $args )
+{
+    $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array('id_user'), 'user_modify' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result = __modify_user_info( $args );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 添加操作日志
+    db_add_sys_operation_log( $_SESSION['id_user'], 'user_modify', 
+        $args['id_user'], 222, '修改用户信息： ' . json_encode($args) );
+    return $result;
+}
+
+function enterprise_symbol_name_exist( $args )
+{
+    global $g_mysql;
+    $result = comm_check_parameters( $args, array('symbol_name') );
+    if( 0 != $result['err'] )
+        return $result;
+    
+    $result['symbol_name'] = $args['symbol_name'];
+    $result['exist'] = 0;
+    $enterprise_info = $g_mysql->selectOne( 'ac_enterprise', array('symbol_name'), array($args['symbol_name']) );
+    if( 0 < count($enterprise_info) )
+        $result['exist'] = 1;
+
+    return $result;
+}
+
+function enterprise_info_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_resource_privilege( $args, array('id_enterprise'), $args['id_enterprise'], 'enterprise_read' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['enterprise_info'] = $g_mysql->selectOne( 'ac_enterprise', array('id_enterprise'), array($args['id_enterprise']) );
+    return $result;
+}
+
+function enterprise_add( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_resource_privilege( $args, array('symbol_name', 'real_name'), $args['id_enterprise'], 'enterprise_add' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $enterprise_info = $g_mysql->selectOne( 'ac_enterprise', 'symbol_name', $args['symbol_name'] );
+    if( 0 < count($enterprise_info) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = '符号名已存在，请换一个';
+        return $result;
+    }
+
+    $result['id_enterprise'] = $g_mysql->insertDataEx( 'ac_enterprise', $args, 'id_enterprise' );
+
+    // 添加操作日志
+    db_add_sys_operation_log( $_SESSION['id_user'], 'enterprise_add', 
+        $result['id_enterprise'], 300, '添加企业： symbol_name = ' . $args['symbol_name'] );
+
+    return $result;
+}
+
+function enterprise_delete( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_resource_privilege( $args, array('id_enterprise'), $args['id_enterprise'], 'enterprise_delete' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 不存在，直接返回成功
+    $enterprise_info = $g_mysql->selectOne( 'ac_enterprise', array('id_enterprise'), array($args['id_enterprise']) );
+    if( 1 > count($enterprise_info) )
+        return $result;
+
+    if( !$g_mysql->deleteData( 'ac_enterprise', 'id_enterprise=?', array($args['id_enterprise']) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 添加操作日志
+    db_add_sys_operation_log( $_SESSION['id_user'], 'enterprise_delete', 
+        $args['id_enterprise'], 301, '删除企业： symbol_name = ' . $enterprise_info['symbol_name'] );
+    return $result;    
+}
+
+function enterprise_modify( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_resource_privilege( $args, array('id_enterprise'), $args['id_enterprise'], 'enterprise_modify' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    if( isset($user_info['symbol_name']) )
+    {
+        $other_enterprise_info = db_get_other_object_info( 'ac_enterprise', 'symbol_name', $args['symbol_name'], 'id_enterprise', $args['id_enterprise'] );
+        if( 0 < int($other_enterprise_info['id_enterprise']) )
+        {
+            $result['err'] = -102;
+            $result['err_msg'] = 'symbol_name 已存在，请换一个';
+            return $result;
+        }
+    }
+
+    if( !$g_mysql->updateDataEx( 'ac_enterprise', $args, 'id_enterprise' ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+    }
+
+    // 添加操作日志
+    db_add_sys_operation_log( $_SESSION['id_user'], 'enterprise_modify', 
+        $args['id_enterprise'], 302, '修改企业信息： ' . json_encode($args) );
+    return $result;
+}
 
 ?>
