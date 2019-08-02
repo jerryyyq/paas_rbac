@@ -1,10 +1,10 @@
 <?php
 
-define( 'LOGIN_TYPE_ALL', 0 );
-define( 'LOGIN_TYPE_SYSTEM', 1 );
-define( 'LOGIN_TYPE_ENTERPRISE', 2 );
-define( 'LOGIN_TYPE_WEB', 3 );
-define( 'LOGIN_TYPE_ENTERPRISE+WEB', 4 );
+define( 'RESOURCE_TYPE_ALL', 0 );
+define( 'RESOURCE_TYPE_SYSTEM', 1 );
+define( 'RESOURCE_TYPE_ENTERPRISE', 2 );
+define( 'RESOURCE_TYPE_WEB', 3 );
+define( 'RESOURCE_TYPE_ENTERPRISE+WEB', 4 );
 
 // 公共路由函数表
 $common_route_functions = array(

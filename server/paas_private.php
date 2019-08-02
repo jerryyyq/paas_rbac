@@ -206,4 +206,70 @@ function __modify_user_info( $user_info )
     return $result;
 }
 
+function __user_add( $args, $resource_type, $id_resource )
+{
+    $user_info = db_get_user_info( 0, '', $args['email'] );
+    if( 0 < int($user_info['id_user']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'email 已存在，请换一个';
+        return $result;
+    }
+
+    // 计算 password
+    $args['salt'] = '';
+    $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
+
+    // 加入数据库
+    $args['state'] = 1;
+    $args['resource_type'] = $resource_type;
+    $args['id_resource'] = $id_resource;
+    $args['email_verify_state'] = 1;
+    $args['mobile_verify_state'] = 1;
+    $args['wx_unionid'] = '';
+    $args['wx_openid'] = '';
+    $result['id_user'] = $g_mysql->insertDataEx( $table_name, $args, 'id_user' ); 
+    
+    return $result;
+}
+
+function __user_delete( $id_user )
+{
+    $g_mysql;
+    if( !$g_mysql->deleteData( 'ac_user', 'id_user=?', array($id_user) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 删除 ac_user_resource_rule
+    if( !$g_mysql->deleteData( 'ac_user_resource_rule', 'id_user=?', array($id_user) ) )
+    {
+        comm_get_default_log()->logError( 'delete ac_user_resource_rule Fail! id_user = ' . $id_user );
+    }
+
+    return $result;
+}
+
+function __check_user_resource_id( $user_info, $resource_type, $id_resource )
+{
+    $result = array('err' => 0, 'err_msg' => '');
+
+    if( $resource_type != $user_info['resource_type'] )
+    {
+        $result['err'] = -106;
+        $result['err_msg'] = '用户类型不匹配';
+        return $result;
+    }    
+    
+    if( $user_info['id_resource'] != $_SESSION['id_enterprise'] )
+    {
+        $result['err'] = -107;
+        $result['err_msg'] = '用户资源 id 与登录资源 id 不匹配';
+    }
+
+    return $result;
+}
+
 ?>

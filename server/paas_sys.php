@@ -516,7 +516,7 @@ function user_info_get( $args )
     if( 0 != $result['err'] )
         return $result;
     
-    $result['user_info'] = $g_mysql->selectOne( 'ac_user', array('id_user'), array($args['id_user']) );
+    $result['user_info'] = db_get_user_info( $args['id_user'] );
     return $result;
 }
 
@@ -527,25 +527,9 @@ function user_add( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    $user_info = db_get_user_info( 0, '', $args['email'] );
-    if( 0 < int($user_info['id_user']) )
-    {
-        $result['err'] = -102;
-        $result['err_msg'] = 'email 已存在，请换一个';
+    $result = __user_add( $args, RESOURCE_TYPE_SYSTEM, 0 );
+    if( 0 != $result['err'] )
         return $result;
-    }
-
-    // 计算 password
-    $args['salt'] = '';
-    $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
-
-    // 加入数据库
-    $args['state'] = 1;
-    $args['email_verify_state'] = 1;
-    $args['mobile_verify_state'] = 1;
-    $args['wx_unionid'] = '';
-    $args['wx_openid'] = '';
-    $result['id_user'] = $g_mysql->insertDataEx( $table_name, $args, 'id_user' );
 
     // 添加操作日志
     db_add_sys_operation_log( $_SESSION['id_user'], 'user_add', 
@@ -566,18 +550,9 @@ function user_delete( $args )
     if( 1 > int($user_info['id_user']) )
         return $result;
 
-    if( !$g_mysql->deleteData( 'ac_user', 'id_user=?', array($args['id_user']) ) )
-    {
-        $result['err'] = -103;
-        $result['err_msg'] = '操作失败';
-        return $result;       
-    }
-
-    // 删除 ac_user_resource_rule
-    if( !$g_mysql->deleteData( 'ac_user_resource_rule', 'id_user=?', array($args['id_user']) ) )
-    {
-        comm_get_default_log()->logError( 'delete ac_user_resource_rule Fail! id_user = ' . $args['id_user'] );
-    }
+    $result = __user_delete( $user_info['id_user'] );
+    if( 0 != $result['err'] )
+        return $result;
 
     // 添加操作日志
     db_add_sys_operation_log( $_SESSION['id_user'], 'user_delete', 
@@ -632,7 +607,7 @@ function enterprise_info_get( $args )
 function enterprise_add( $args )
 {
     global $g_mysql;
-    $result = __check_parameters_and_resource_privilege( $args, array('symbol_name', 'real_name'), $args['id_enterprise'], 'enterprise_add' );
+    $result = __check_parameters_and_resource_privilege( $args, array('symbol_name', 'real_name'), 0, 'enterprise_add' );
     if( 0 != $result['err'] )
         return $result;
 

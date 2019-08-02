@@ -231,6 +231,8 @@ CREATE TABLE `ac_user` (
   `password` varchar(512) DEFAULT NULL,
   `real_name` varchar(128) DEFAULT NULL COMMENT '真实姓名',
   `state` int(11) DEFAULT '0' COMMENT '用户的状态：例如是否激活、注销等等',
+  `resource_type` int(11) DEFAULT 0 COMMENT '指定管理员类型, 1:sys, 2:enteprise, 3:websit',
+  `id_resource` int(11) DEFAULT 0 COMMENT '指定属于具体哪个资源的管理员, 1:sys, 2:enteprise, 3:websit', 
   `id_channel` int(11) DEFAULT '0' COMMENT '是从哪个渠道加过来的。0 为非渠道用户。',
   `oauth_platform_type` varchar(128) DEFAULT NULL COMMENT '第三方登录平台类型。‘’ 和 ‘0’ 表示没有第三方登录平台关联帐号；‘1’ 是微信 unionid；‘2’是微信 openid；''3''是 QQ；‘4’是新浪；',
   `wx_unionid` varchar(128) DEFAULT NULL,
@@ -273,7 +275,7 @@ CREATE TABLE `ac_user_resource_rule` (
   `id_user` int(11) DEFAULT NULL,
   `id_rule` int(11) DEFAULT NULL,
   `resource_type` int(11) NOT NULL COMMENT '1:sys, 2:enteprise, 3:websit',
-  `id_resource` int(11) DEFAULT NULL,
+  `id_resource` int(11) DEFAULT 0 COMMENT '指定具体哪个资源',
   `description` varchar(256) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `index2` (`id_user`,`id_rule`)
