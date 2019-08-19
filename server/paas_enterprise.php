@@ -32,12 +32,7 @@ $route_functions = array_merge($common_route_functions, array(
     'admin_resource_rule_add',
     'admin_resource_rule_delete',
 
-    'privilege_all_get',
-    'privilege_info_get',
-    'rule_all_get',
-    'rule_info_get',
-    'rule_privilege_all_get',
-    'rule_privilege_info_get',    
+  
     
 ));
 
@@ -263,20 +258,7 @@ function enterprise_admin_delete( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    if( $args['id_enterprise'] != $_SESSION['id_enterprise'] )
-    {
-        $result['err'] = -105;
-        $result['err_msg'] = '企业 id 与登录企业不匹配';
-        return $result;
-    }
-
-    // 不存在，直接返回成功
-    $user_info = db_get_user_info( $args['id_user'] );
-    if( 1 > int($user_info['id_user']) )
-        return $result;
-
-    // 检查目标用户是否是该企业下的管理员
-    $result = __check_user_resource_id($user_info, RESOURCE_TYPE_ENTERPRISE, $_SESSION['id_enterprise']);
+    $result = __check_user_belong_enterprise( $args, $result );
     if( 0 != $result['err'] )
         return $result;
 
@@ -297,24 +279,7 @@ function enterprise_admin_modify( $args )
     if( 0 != $result['err'] )
         return $result;
 
-    if( $args['id_enterprise'] != $_SESSION['id_enterprise'] )
-    {
-        $result['err'] = -105;
-        $result['err_msg'] = '企业 id 与登录企业不匹配';
-        return $result;
-    }
-
-    // 用户不存在
-    $user_info = db_get_user_info( $args['id_user'] );
-    if( 1 > int($user_info['id_user']) )
-    {
-        $result['err'] = -102;
-        $result['err_msg'] = '用户不存在';
-        return $result;
-    }
-
-    // 检查目标用户是否是该企业下的管理员
-    $result = __check_user_resource_id($user_info, RESOURCE_TYPE_ENTERPRISE, $_SESSION['id_enterprise']);
+    $result = __check_user_belong_enterprise( $args, $result );
     if( 0 != $result['err'] )
         return $result;
 
@@ -325,6 +290,123 @@ function enterprise_admin_modify( $args )
     // 添加操作日志
     db_add_enterprise_operation_log( $_SESSION['id_user'], $_SESSION['id_enterprise'], 'enterprise_admin_modify', 
         $args['id_user'], 322, '修改企业管理员信息： ' . json_encode($args) );
+    return $result;
+}
+
+function admin_resource_rule_all_get( $args )
+{
+    $g_mysql;
+    $result = __check_parameters_and_resource_privilege( $args, array('id_enterprise', 'id_user'), $args['id_enterprise'], 'enterprise_admin_rule' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result = __check_user_belong_enterprise( $args, $result );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['admin_resource_rule_list'] = $g_mysql->selectDataEx( 'ac_user_resource_rule', array('id_user'), array($args['id_user']) );
+    return $result;
+}
+
+function admin_resource_rule_info_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_resource_privilege( $args, array('id_enterprise', 'id_user', 'id'), $args['id_enterprise'], 'enterprise_admin_rule' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result = __check_user_belong_enterprise( $args, $result );
+    if( 0 != $result['err'] )
+        return $result;
+    
+    $result['admin_resource_rule_info'] = $g_mysql->selectOne( 'ac_user_resource_rule', array('id', 'id_user'), array($args['id'], $args['id_user']) );
+    return $result;
+}
+
+function admin_resource_rule_add( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_resource_privilege( $args, array('id_user', 'id_rule', 'resource_type', 'id_resource'), $args['id_enterprise'], 'enterprise_admin_rule' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result = __check_user_belong_enterprise( $args, $result );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 如果已存在则直接返回
+    $user_rule_info = $g_mysql->selectOne( 'ac_user_resource_rule',
+        array('id_user', 'id_rule', 'resource_type', 'id_resource'),
+        array($args['id_user'], $args['id_rule'], $args['resource_type'], $args['id_resource']) );
+    if( 0 < $user_rule_info['id'] )
+    {
+        $result['id'] = $user_rule_info['id'];
+        return $result;
+    }
+
+    $rule_info = $g_mysql->selectOne( 'ac_rule', array('id_rule'), array($args['id_rule']) );
+    if( 1 > count($rule_info) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'id_rule 不存在，请检查';
+        return $result;
+    }
+
+    // 资源是否存在
+    if( 1 < intval($args['resource_type']) )
+    {
+        $table_name = 'ac_enterprise';
+        $primary_key_name = 'id_enterprise';
+        if( 2 === intval($args['resource_type']) )
+        {
+            $table_name = 'ac_website';
+            $primary_key_name = 'id_website';
+        }
+
+        $resource_info = $g_mysql->selectOne( $table_name, array($primary_key_name), array($args['id_resource']) );
+        if( 1 > count($resource_info) )
+        {
+            $result['err'] = -102;
+            $result['err_msg'] = 'id_resource 不存在，请检查';
+            return $result;
+        }
+    }
+
+    // 插入数据
+    $result['id'] = $g_mysql->insertDataEx( 'ac_user_resource_rule', $args, 'id' );
+    
+    // 添加操作日志
+    db_add_enterprise_operation_log( $_SESSION['id_user'], $_SESSION['id_enterprise'], 'admin_resource_rule_add', 
+        $result['id'], 350, '添加用户角色：' . json_encode($args) );
+    return $result;
+}
+
+function admin_resource_rule_delete( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_resource_privilege( $args, array('id_enterprise', 'id_user', 'id'), $args['id_enterprise'], 'enterprise_admin_rule' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    // 不存在，直接返回成功
+    $user_rule_info = $g_mysql->selectOne( 'ac_user_resource_rule', array('id'), array($args['id']) );
+    if( 1 > count($user_rule_info) )
+        return $result;
+
+    $result = __check_user_belong_enterprise( $args, $result );
+    if( 0 != $result['err'] )
+        return $result;
+
+    if( !$g_mysql->deleteData( 'ac_user_resource_rule', 'id=?', array($args['id']) ) )
+    {
+        $result['err'] = -103;
+        $result['err_msg'] = '操作失败';
+        return $result;       
+    }
+
+    // 添加操作日志
+    db_add_enterprise_operation_log( $_SESSION['id_user'], $_SESSION['id_enterprise'], 'admin_rule_delete', 
+        $args['id'], 351, '删除用户角色：' . json_encode($args) );
     return $result;
 }
 

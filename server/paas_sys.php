@@ -33,7 +33,7 @@ $route_functions = array(
     'rule_privilege_info_get',
     'rule_privilege_add',
     'rule_privilege_delete',
-    'user_resource_rule_all_get',
+    'user_resource_rule_all_get',   // 没有指定 id_user 的，就返回所有用户的资源角色列表
     'user_resource_rule_info_get',
     'user_resource_rule_add',
     'user_resource_rule_delete',
@@ -406,7 +406,7 @@ function user_resource_rule_all_get( $args )
     
     if(isset($args['id_user']))
         $result['user_resource_rule_list'] = $g_mysql->selectDataEx( 'ac_user_resource_rule', array('id_user'), array($args['id_user']) );
-    else
+    else    // 没有指定 id_user 的，就返回所有用户的资源角色列表
         $result['user_resource_rule_list'] = $g_mysql->selectDataEx( 'ac_user_resource_rule' );
     return $result;
 }

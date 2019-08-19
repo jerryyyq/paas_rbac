@@ -272,4 +272,29 @@ function __check_user_resource_id( $user_info, $resource_type, $id_resource )
     return $result;
 }
 
+function __check_user_belong_enterprise( $args, $result )
+{
+    if( $args['id_enterprise'] != $_SESSION['id_enterprise'] )
+    {
+        $result['err'] = -105;
+        $result['err_msg'] = '企业 id 与登录企业不匹配';
+        return $result;
+    }
+
+    // 用户不存在
+    $user_info = db_get_user_info( $args['id_user'] );
+    if( 1 > int($user_info['id_user']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = '用户不存在';
+        return $result;
+    }
+
+    $result['user_info'] = $user_info;
+
+    // 检查目标用户是否是该企业下的管理员
+    $result = __check_user_resource_id($user_info, RESOURCE_TYPE_ENTERPRISE, $_SESSION['id_enterprise']);
+    return $result;
+}
+
 ?>

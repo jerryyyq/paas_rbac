@@ -12,7 +12,14 @@ $common_route_functions = array(
     'login',
     'change_password',      // realize in paas_common.php
     'have_privilege',
-    'have_resource_privilege'
+    'have_resource_privilege',
+
+    'privilege_all_get',
+    'privilege_info_get',
+    'rule_all_get',
+    'rule_info_get',
+    'rule_privilege_all_get',
+    'rule_privilege_info_get',  
 );
 
 function test( $args )
@@ -75,6 +82,73 @@ function have_resource_privilege( $args )
         return $result;
 
     $result['have'] = __have_resource_privilege_ex($args['id_resource'], $args['privilege_name']);
+    return $result;
+}
+
+function privilege_all_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array(), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['privilege_list'] = $g_mysql->selectDataEx( 'ac_privilege' );
+    return $result;
+}
+
+function privilege_info_get( $args )
+{
+    global $g_mysql;
+    $result = comm_check_parameters( $args, array('name') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    //$result['privilege_info'] = db_get_some_table_info( 'ac_privilege', 'name', $args['name'], 'id_privilege' );
+    $result['privilege_info'] = $g_mysql->selectOne( 'ac_privilege', array('name'), array($args['name']) );
+    return $result;
+}
+
+function rule_all_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array(), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['rule_list'] = $g_mysql->selectDataEx( 'ac_rule' );
+    return $result;
+}
+
+function rule_info_get( $args )
+{
+    global $g_mysql;
+    $result = comm_check_parameters( $args, array('name') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['rule_info'] = $g_mysql->selectOne( 'ac_rule', array('name'), array($args['name']) );
+    return $result;
+}
+
+function rule_privilege_all_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array(), 'privilege_manage' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['rule_privilege_list'] = $g_mysql->selectDataEx( 'ac_rule_privilege' );
+    return $result;
+}
+
+function rule_privilege_info_get( $args )
+{
+    global $g_mysql;
+    $result = comm_check_parameters( $args, array('id') );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['rule_privilege_info'] = $g_mysql->selectOne( 'ac_rule_privilege', array('id'), array($args['id']) );
     return $result;
 }
 
