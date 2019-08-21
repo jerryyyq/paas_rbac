@@ -12,10 +12,10 @@ require_once('./paas_private.php');
 require_once('./paas_common_function.php');
 use minimum_frame\YLog;
 
-
 // 路由函数表
 $route_functions = array_merge($common_route_functions, array(
     'website_symbol_name_exist',
+    'website_all_id_get',        // 返回这个管理员有权看到的所有的网站 id 列表
     'website_info_get',
     'website_add',
     'website_delete',
@@ -32,8 +32,7 @@ $route_functions = array_merge($common_route_functions, array(
     'admin_resource_rule_add',
     'admin_resource_rule_delete',
 
-  
-    
+    'operation_log_get',
 ));
 
 // 调用主路由函数
@@ -76,6 +75,17 @@ function website_symbol_name_exist( $args )
     if( 0 < count($website_info) )
         $result['exist'] = 1;
 
+    return $result;
+}
+
+function website_all_id_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_resource_privilege( $args, array(), 0, 'website_read' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['website_id_list'] = __get_privilege_resource_list( 'website_read', RESOURCE_TYPE_WEB );
     return $result;
 }
 
@@ -407,6 +417,23 @@ function admin_resource_rule_delete( $args )
     // 添加操作日志
     db_add_enterprise_operation_log( $_SESSION['id_user'], $_SESSION['id_enterprise'], 'admin_rule_delete', 
         $args['id'], 351, '删除用户角色：' . json_encode($args) );
+    return $result;
+}
+
+function operation_log_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_resource_privilege( $args, array('id_enterprise', 'id_user'), $args['id_enterprise'], 'sys_log_read' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result = __check_user_belong_enterprise( $args, $result );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['operation_log_list'] = $g_mysql->selectDataEx( 'ac_enterprise_operation_log', 
+        array('id_enterprise'), array($args['id_enterprise']) );
+        
     return $result;
 }
 

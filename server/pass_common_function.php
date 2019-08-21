@@ -19,7 +19,12 @@ $common_route_functions = array(
     'rule_all_get',
     'rule_info_get',
     'rule_privilege_all_get',
-    'rule_privilege_info_get',  
+    'rule_privilege_info_get',
+
+    'goods_all_type_get',
+    'goods_all_id_get',
+    'goods_all_info_get',
+    'goods_info_get',
 );
 
 function test( $args )
@@ -149,6 +154,69 @@ function rule_privilege_info_get( $args )
         return $result;
 
     $result['rule_privilege_info'] = $g_mysql->selectOne( 'ac_rule_privilege', array('id'), array($args['id']) );
+    return $result;
+}
+
+function goods_all_type_get( $args )
+{
+    global $g_mysql;
+    $result = comm_check_parameters( $args, array(id_website) );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['goods_type_list'] = $g_mysql->selectDataEx( 'ac_goods_type', array('id_website'), array($args['id_website']) );
+    return $result;
+}
+
+function goods_all_id_get( $args )
+{
+    global $g_mysql;
+    $result = comm_check_parameters( $args, array(id_website) );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $sql = "SELECT id_goods FROM ac_goods WHERE id_website = ?";
+    $bind_param = array( $args['id_website'] );
+    if( isset($args['id_goods_type']) )
+    {
+        $sql = "SELECT id_goods FROM ac_goods WHERE id_website = ? AND id_goods_type = ?";
+        $bind_param = array( $args['id_website'], $args['id_goods_type'] );
+    }
+
+    $all_id_list = array();
+    $rows = $g_mysql->selectData( $sql, $bind_param );
+    foreach( $rows as $row )
+    {
+        $all_id_list[] = $row[0];
+    }
+
+    $result['goods_id_list'] = $all_id_list;
+    return $result;
+}
+
+function goods_all_info_get( $args )
+{
+    global $g_mysql;
+    $result = comm_check_parameters( $args, array(id_website) );
+    if( 0 != $result['err'] )
+        return $result;
+
+    if( isset($args['id_goods_type']) )
+        $result['goods_info_list'] = $g_mysql->selectDataEx( 'ac_goods', array('id_website', 'id_goods_type'), array($args['id_website'], $args['id_goods_type']) );
+    else
+        $result['goods_info_list'] = $g_mysql->selectDataEx( 'ac_goods', array('id_website'), array($args['id_website']) );
+
+    return $result;
+}
+
+function goods_info_get( $args )
+{
+    global $g_mysql;
+    $result = comm_check_parameters( $args, array(id_goods) );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['goods_info'] = $g_mysql->selectOne( 'ac_goods', array('id_goods'), array($args['id_goods']) );
     return $result;
 }
 

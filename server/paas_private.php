@@ -166,6 +166,42 @@ function __check_parameters_and_resource_privilege( $args, $mast_exist_parameter
     return $result;
 }
 
+// 获得一个用户可以管理的某类资源的列表
+function __get_privilege_resource_list( $privilege_name, $resource_type )
+{
+    global $g_mysql;
+    if( RESOURCE_TYPE_ENTERPRISE !== $resource_type && RESOURCE_TYPE_WEB != $resource_type )
+        return $resource_id_list;
+
+    $resource_id_list = array();
+    foreach( $_SESSION['user_privilege'] as $privilege )
+    {
+        if( $privilege_name === $privilege['name'] && $resource_type === intval($privilege['resource_type']) && 0 === intval($privilege['id_resource']) )
+        {
+            $all_id_list = array();
+            // 需要获得所有这个类型的资源的 id 列表
+            $sql = "SELECT id_enterprise FROM ac_enterprise";
+            if( RESOURCE_TYPE_WEB === $resource_type )
+                $sql = "SELECT id_website FROM ac_website";
+
+            $rows = $g_mysql->SelectData($sql);
+            foreach( $rows as $row )
+            {
+                $all_id_list[] = $row[0];
+            }
+
+            return $all_id_list;
+        }
+
+        if( $privilege_name === $privilege['name'] && $resource_type === intval($privilege['resource_type']) )
+        {
+            $resource_id_list[] = intval($privilege['id_resource']);
+        }
+    }
+
+    return $resource_id_list;
+}
+
 // 修改用户信息，会自动过滤掉 salt, password
 function __modify_user_info( $user_info )
 {

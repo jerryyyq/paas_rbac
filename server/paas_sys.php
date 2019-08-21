@@ -44,10 +44,13 @@ $route_functions = array(
     'user_modify',
 
     'enterprise_symbol_name_exist',
+    'enterprise_all_id_get',        // 返回这个管理员有权看到的所有的企业 id 列表
     'enterprise_info_get',
     'enterprise_add',
     'enterprise_delete',
     'enterprise_modify',
+
+    'operation_log_get',
 );
 
 // 调用主路由函数
@@ -404,7 +407,7 @@ function user_resource_rule_all_get( $args )
     if( 0 != $result['err'] )
         return $result;
     
-    if(isset($args['id_user']))
+    if( isset($args['id_user']) )
         $result['user_resource_rule_list'] = $g_mysql->selectDataEx( 'ac_user_resource_rule', array('id_user'), array($args['id_user']) );
     else    // 没有指定 id_user 的，就返回所有用户的资源角色列表
         $result['user_resource_rule_list'] = $g_mysql->selectDataEx( 'ac_user_resource_rule' );
@@ -593,6 +596,16 @@ function enterprise_symbol_name_exist( $args )
     return $result;
 }
 
+function enterprise_all_id_get( $args )
+{
+    $result = __check_parameters_and_resource_privilege( $args, array(), 0, 'enterprise_read' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['enterprise_id_list'] = __get_privilege_resource_list( 'enterprise_read', RESOURCE_TYPE_ENTERPRISE );
+    return $result;
+}
+
 function enterprise_info_get( $args )
 {
     global $g_mysql;
@@ -683,4 +696,15 @@ function enterprise_modify( $args )
     return $result;
 }
 
+function operation_log_get( $args )
+{
+    global $g_mysql;
+    $result = __check_parameters_and_privilege( $args, array('id_user'), 'sys_log_read' );
+    if( 0 != $result['err'] )
+        return $result;
+
+    $result['operation_log_list'] = $g_mysql->selectDataEx( 'ac_sys_operation_log' );
+
+    return $result;
+}
 ?>

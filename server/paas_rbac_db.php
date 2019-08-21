@@ -152,7 +152,7 @@ function db_expand_one_privilege( $resource_type, $id_resource, $id_privilege, $
     return $result;
 }
 
-// 展开权限：添加所有的子权限。只做一级子权限查找，不会递归查找孙权限。
+// 展开权限：添加所有的子权限。只做一级子权限查找，不会递归查找孙权限。已废弃
 // 入参为：[id_privilege, id_privilege...]
 // 返回值为：ac_privilege 表的多条记录
 function db_expand_all_privilege( $privilege )
