@@ -16,6 +16,7 @@ $route_functions = array_merge($common_route_functions, array(
     'website_all_id_get',
     'website_info_get',
 
+    'user_register'
 ));
 
 // 调用主路由函数
@@ -66,6 +67,37 @@ function website_info_get( $args )
     return $result;
 }
 
+function user_register( $args )
+{
+    $result = comm_check_parameters( $args, array('name', 'email', 'mobile', 'password') );
+    if( 0 != $result['err'] )
+        return $result;
 
+    // 获得用户表名
+    $user_info = db_get_user_info( 'ac_user', 'id_user', 0, '', $args['email'] );
+    if( 0 < int($user_info['id_user']) )
+    {
+        $result['err'] = -102;
+        $result['err_msg'] = 'email 已存在，请换一个';
+        return $result;
+    }
+
+    // 计算 password
+    $args['salt'] = '';
+    $args['password'] = comm_get_password_hash( $args['password'], $args['salt'] );
+
+    // 加入数据库
+    $args['state'] = 0;
+    $args['email_verify_state'] = 0;
+    $args['mobile_verify_state'] = 0;
+    $args['wx_unionid'] = '';
+    $args['wx_openid'] = '';
+    $result['id_user'] = db_insert_data_ex( $table_name, $args, 'id_user' );
+
+    // 缺：验证 email 和 mobile
+
+
+    return $result;
+}
 
 ?>
